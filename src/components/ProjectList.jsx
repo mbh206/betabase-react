@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 export default function ProjectList() {
 	return (
 		<>
-			<h1>Projects</h1>
+			<h1 className='text-3xl font-bold underline'>Projects</h1>
 			<ul>
 				<li>
 					<Link to='/projects/1'>Project 1</Link>
