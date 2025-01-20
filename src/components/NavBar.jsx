@@ -11,7 +11,7 @@ export default function NavBar() {
 					alt='Main Logo'
 					width='100px'
 				/>
-				<ul className='flex gap-4 my-5'>
+				<ul className='flex gap-5 my-5 uppercase font-bold text-2xl'>
 					<li>
 						<Link to='/'>Home</Link>
 					</li>

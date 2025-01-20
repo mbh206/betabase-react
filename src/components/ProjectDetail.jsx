@@ -3,11 +3,11 @@ import { useParams } from 'react-router-dom';
 import KanbanBoard from './KanbanBoard';
 
 export default function ProjectDetail() {
-	const { id } = useParams();
+	const { name } = useParams();
 	return (
 		<>
 			<h1 className='text-3xl font-bold underline'>
-				Project Details for ID: {id}
+				Project Details for: {name}
 			</h1>
 			<KanbanBoard />
 		</>
