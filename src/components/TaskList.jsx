@@ -12,6 +12,7 @@ import {
 const TaskList = ({ projectId }) => {
 	const [tasks, setTasks] = useState([]);
 	const [newTask, setNewTask] = useState('');
+	const [newTaskDetails, setNewTaskDetails] = useState('');
 
 	useEffect(() => {
 		const fetchTasks = async () => {
@@ -31,9 +32,18 @@ const TaskList = ({ projectId }) => {
 		const taskCollection = collection(db, 'projects', projectId, 'tasks');
 		const taskRef = await addDoc(taskCollection, {
 			title: newTask,
+			details: newTaskDetails,
 			status: 'To Do',
 		});
-		setTasks([...tasks, { id: taskRef.id, title: newTask, status: 'To Do' }]);
+		setTasks([
+			...tasks,
+			{
+				id: taskRef.id,
+				title: newTask,
+				details: newTaskDetails,
+				status: 'To Do',
+			},
+		]);
 		setNewTask('');
 	};
 
@@ -68,36 +78,63 @@ const TaskList = ({ projectId }) => {
 				{tasks.map((task) => (
 					<li
 						key={task.id}
-						className='p-2 border-b flex gap-2'>
-						<span>{task.title}</span>
-						<select
-							value={task.status}
-							onChange={(e) => handleUpdateTask(task.id, e.target.value)}
-							className='bg-blue-500 text-white text-center px-1 py-0 rounded text-xs uppercase '>
-							<option value='To Do'>To Do</option>
-							<option value='In Progress'>In Progress</option>
-							<option value='Done'>Done</option>
-						</select>
-						<button
-							onClick={() => handleDeleteTask(task.id)}
-							className='bg-red-600 text-white px-1 py-0 rounded text-xs uppercase'>
-							Delete
-						</button>
+						className='p-2 border-b flex justify-between bg-gray-200'>
+						<div>
+							<span className='bg-gray-100 px-2 py-1 rounded mr-2'>
+								{task.title}
+							</span>
+							<span className='bg-gray-100 px-2 py-1 rounded'>
+								{task.details}
+							</span>
+						</div>
+						<div>
+							<select
+								value={task.status}
+								onChange={(e) => handleUpdateTask(task.id, e.target.value)}
+								className={`text-white text-center px-2 py-1 rounded text-xs uppercase ${
+									task.status === 'To Do'
+										? 'bg-blue-500'
+										: `${
+												task.status === 'In Progress'
+													? 'bg-green-500'
+													: 'bg-gray-500'
+										  }`
+								}`}>
+								<option value='To Do'>To Do</option>
+								<option value='In Progress'>In Progress</option>
+								<option value='Done'>Done</option>
+							</select>
+							<button
+								onClick={() => handleDeleteTask(task.id)}
+								className='bg-red-600 text-white px-2 py-1 rounded text-xs uppercase ml-2'>
+								Delete
+							</button>
+						</div>
 					</li>
 				))}
 			</ul>
-			<input
-				type='text'
-				value={newTask}
-				onChange={(e) => setNewTask(e.target.value)}
-				placeholder='New Task'
-				className='border p-2 mt-4'
-			/>
-			<button
-				onClick={handleAddTask}
-				className='bg-green-500 text-white px-4 py-2 rounded'>
-				Add Task
-			</button>
+			<div className='flex gap-2'>
+				<input
+					type='text'
+					value={newTask}
+					onChange={(e) => setNewTask(e.target.value)}
+					placeholder='New Task'
+					className='border p-2 mt-4'
+				/>
+				<input
+					name='details'
+					id='details'
+					value={newTaskDetails}
+					placeholder='Task Details'
+					onChange={(e) => setNewTaskDetails(e.target.value)}
+					className='border p-2 mt-4'
+				/>
+				<button
+					onClick={handleAddTask}
+					className='bg-green-500 text-white px-4 py-2 mt-4 rounded'>
+					Add Task
+				</button>
+			</div>
 		</div>
 	);
 };
