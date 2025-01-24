@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function Modal({
 	isOpen,
@@ -9,7 +9,28 @@ export default function Modal({
 	onTaskUpdate,
 	onTaskDelete,
 }) {
+	const [newTaskTitle, setNewTaskTitle] = useState('');
+	const [newTaskDescription, setNewTaskDescription] = useState('');
+	const [newTaskDueDate, setNewTaskDueDate] = useState('');
+
 	if (!isOpen) return null;
+
+	const handleAddTask = () => {
+		if (newTaskTitle.trim() === '') return;
+
+		// Pass all task details to onTaskAdd
+		onTaskAdd({
+			title: newTaskTitle,
+			description: newTaskDescription,
+			dueDate: newTaskDueDate,
+			status: 'To Do', // Default status
+		});
+
+		// Clear inputs after adding
+		setNewTaskTitle('');
+		setNewTaskDescription('');
+		setNewTaskDueDate('');
+	};
 
 	return (
 		<div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50'>
@@ -18,29 +39,69 @@ export default function Modal({
 				<p className='text-gray-600 mb-6'>{project.description}</p>
 
 				<h3 className='text-xl font-semibold mb-4'>Tasks</h3>
-				<ul className='space-y-2'>
+				<ul className='space-y-2 flex flex-col'>
 					{tasks.map((task) => (
 						<li
 							key={task.id}
 							className='p-2 border rounded flex justify-between'>
-							<span>
-								{task.title} ({task.status})
-							</span>
-							<div>
-								<button
-									onClick={() => onTaskUpdate(task)}
-									className='bg-blue-500 text-white px-4 py-1 rounded mr-2'>
-									Update
-								</button>
+							<span>{task.title}</span>
+							<span>{task.description}</span>
+							<span>{task.dueDate}</span>
+							<div className='flex flex-col gap-1 w-16 text-xs'>
+								<select
+									value={task.status}
+									onChange={(e) =>
+										onTaskUpdate(task.id, { status: e.target.value })
+									}
+									className={`text-white py-1 rounded text-center ${
+										task.status === 'To Do'
+											? 'bg-blue-500'
+											: task.status === 'In Progress'
+											? 'bg-green-500'
+											: 'bg-gray-500'
+									}`}>
+									<option value='To Do'>To Do</option>
+									<option value='In Progress'>In Progress</option>
+									<option value='Done'>Done</option>
+								</select>
 								<button
 									onClick={() => onTaskDelete(task.id)}
-									className='bg-red-500 text-white px-4 py-1 rounded'>
+									className='bg-red-500 text-white py-1 rounded w-100'>
 									Delete
 								</button>
 							</div>
 						</li>
 					))}
 				</ul>
+
+				{/* Add Task Section */}
+				<div className='mt-4'>
+					<input
+						type='text'
+						placeholder='Task Title'
+						value={newTaskTitle}
+						onChange={(e) => setNewTaskTitle(e.target.value)}
+						className='border rounded px-4 py-2 w-full mb-2'
+					/>
+					<input
+						type='text'
+						placeholder='Task Description'
+						value={newTaskDescription}
+						onChange={(e) => setNewTaskDescription(e.target.value)}
+						className='border rounded px-4 py-2 w-full mb-2'
+					/>
+					<input
+						type='date'
+						value={newTaskDueDate}
+						onChange={(e) => setNewTaskDueDate(e.target.value)}
+						className='border rounded px-4 py-2 w-full mb-2'
+					/>
+					<button
+						onClick={handleAddTask}
+						className='bg-green-500 text-white px-4 py-2 rounded w-full'>
+						Add Task
+					</button>
+				</div>
 
 				<button
 					onClick={closeModal}

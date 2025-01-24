@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import {
+	collection,
+	getDocs,
+	doc,
+	deleteDoc,
+	updateDoc,
+	addDoc,
+} from 'firebase/firestore';
 import Modal from './Modal';
 
 export default function Home() {
@@ -54,6 +61,55 @@ export default function Home() {
 		}
 	};
 
+	const handleAddTask = async (taskDetails) => {
+		if (!selectedProject) return;
+
+		try {
+			// Reference to the tasks collection within the selected project
+			const taskRef = collection(db, 'projects', selectedProject.id, 'tasks');
+
+			// Add the task to Firestore
+			const taskDoc = await addDoc(taskRef, taskDetails);
+
+			// Update local state to include the new task
+			setTasks((prev) => [...prev, { id: taskDoc.id, ...taskDetails }]);
+		} catch (error) {
+			console.error('Error adding task:', error);
+		}
+	};
+
+	// Handle Deleting a Task
+	const handleDeleteTask = async (taskId) => {
+		if (!selectedProject) return;
+
+		try {
+			const taskRef = doc(db, 'projects', selectedProject.id, 'tasks', taskId);
+			await deleteDoc(taskRef);
+
+			setTasks((prev) => prev.filter((task) => task.id !== taskId));
+		} catch (error) {
+			console.error('Error deleting task:', error);
+		}
+	};
+
+	// Handle Updating a Task
+	const handleUpdateTask = async (taskId, updatedFields) => {
+		if (!selectedProject) return;
+
+		try {
+			const taskRef = doc(db, 'projects', selectedProject.id, 'tasks', taskId);
+			await updateDoc(taskRef, updatedFields);
+
+			setTasks((prev) =>
+				prev.map((task) =>
+					task.id === taskId ? { ...task, ...updatedFields } : task
+				)
+			);
+		} catch (error) {
+			console.error('Error updating task:', error);
+		}
+	};
+
 	return (
 		<div className='p-4'>
 			<h1 className='text-3xl font-bold mb-4'>My Projects</h1>
@@ -87,9 +143,9 @@ export default function Home() {
 				closeModal={handleCloseModal}
 				project={selectedProject}
 				tasks={tasks}
-				onTaskAdd={() => console.log('Add Task')}
-				onTaskUpdate={() => console.log('Update Task')}
-				onTaskDelete={() => console.log('Delete Task')}
+				onTaskAdd={handleAddTask}
+				onTaskUpdate={handleUpdateTask}
+				onTaskDelete={handleDeleteTask}
 			/>
 		</div>
 	);
