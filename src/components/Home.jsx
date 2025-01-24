@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import Modal from './Modal';
 
 export default function Home() {
 	const [projects, setProjects] = useState([]);
-	const [stats, setStats] = useState({ activeProjects: 0, completedTasks: 0 });
+	const [selectedProject, setSelectedProject] = useState(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [tasks, setTasks] = useState([]);
 
 	useEffect(() => {
-		const fetchData = async () => {
+		const fetchProjects = async () => {
 			const projectsCollection = collection(db, 'projects');
 			const projectsSnapshot = await getDocs(projectsCollection);
 
@@ -16,63 +19,78 @@ export default function Home() {
 				...doc.data(),
 			}));
 
-			// Calculate stats
-			const activeProjects = projectsData.length;
-			const completedTasks = projectsData.reduce(
-				(total, project) => total + project.completedTasks || 0,
-				0
-			);
-
 			setProjects(projectsData);
-			setStats({ activeProjects, completedTasks });
 		};
 
-		fetchData();
+		fetchProjects();
 	}, []);
+
+	const handleOpenModal = async (projectId) => {
+		const project = projects.find((p) => p.id === projectId);
+		setSelectedProject(project);
+
+		const tasksCollection = collection(db, 'projects', projectId, 'tasks');
+		const tasksSnapshot = await getDocs(tasksCollection);
+		const tasksData = tasksSnapshot.docs.map((doc) => ({
+			id: doc.id,
+			...doc.data(),
+		}));
+
+		setTasks(tasksData);
+		setIsModalOpen(true);
+	};
+
+	const handleCloseModal = () => {
+		setSelectedProject(null);
+		setIsModalOpen(false);
+	};
+
+	const handleDeleteProject = async (projectId) => {
+		try {
+			await deleteDoc(doc(db, 'projects', projectId));
+			setProjects((prev) => prev.filter((project) => project.id !== projectId));
+		} catch (error) {
+			console.error('Error deleting project:', error);
+		}
+	};
 
 	return (
 		<div className='p-4'>
-			<h1 className='text-3xl font-bold mb-4'>Dashboard</h1>
-			<div className='grid grid-cols-2 gap-4 mb-8'>
-				<div className='p-4 bg-blue-500 text-white rounded'>
-					<h2 className='text-lg'>Active Projects</h2>
-					<p className='text-2xl'>{stats.activeProjects}</p>
-				</div>
-				<div className='p-4 bg-green-500 text-white rounded'>
-					<h2 className='text-lg'>Completed Tasks</h2>
-					<p className='text-2xl'>{stats.completedTasks}</p>
-				</div>
+			<h1 className='text-3xl font-bold mb-4'>My Projects</h1>
+			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+				{projects.map((project) => (
+					<div
+						key={project.id}
+						className='p-4 bg-white shadow-md rounded border'>
+						<h2 className='text-xl font-semibold'>{project.name}</h2>
+						<p className='text-gray-600'>
+							{project.description || 'No description provided.'}
+						</p>
+						<div className='mt-4 flex justify-between'>
+							<button
+								onClick={() => handleOpenModal(project.id)}
+								className='bg-blue-500 text-white px-4 py-2 rounded'>
+								View Details
+							</button>
+							<button
+								onClick={() => handleDeleteProject(project.id)}
+								className='bg-red-500 text-white px-4 py-2 rounded'>
+								Delete
+							</button>
+						</div>
+					</div>
+				))}
 			</div>
-			<div className='mb-8'>
-				<h2 className='text-2xl font-semibold mb-4'>Recent Projects</h2>
-				{projects.length > 0 ? (
-					<ul className='space-y-2'>
-						{projects.slice(0, 5).map((project) => (
-							<li
-								key={project.id}
-								className='p-4 border rounded shadow-sm flex justify-between'>
-								<span>{project.name}</span>
-								<button
-									className='bg-blue-500 text-white px-4 py-2 rounded'
-									onClick={() =>
-										(window.location.href = `/projects/${project.id}`)
-									}>
-									View
-								</button>
-							</li>
-						))}
-					</ul>
-				) : (
-					<p>No projects to display.</p>
-				)}
-			</div>
-			<div>
-				<button
-					className='bg-green-500 text-white px-6 py-3 rounded shadow'
-					onClick={() => (window.location.href = '/projects/add')}>
-					Start New Project
-				</button>
-			</div>
+
+			<Modal
+				isOpen={isModalOpen}
+				closeModal={handleCloseModal}
+				project={selectedProject}
+				tasks={tasks}
+				onTaskAdd={() => console.log('Add Task')}
+				onTaskUpdate={() => console.log('Update Task')}
+				onTaskDelete={() => console.log('Delete Task')}
+			/>
 		</div>
 	);
 }
