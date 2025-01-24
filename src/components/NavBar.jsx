@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../logo.svg';
+import '../App.css';
 
 export default function NavBar() {
 	return (
@@ -10,6 +11,7 @@ export default function NavBar() {
 					src={logo}
 					alt='Main Logo'
 					width='100px'
+					className='App-logo-spin'
 				/>
 				<ul className='flex gap-5 my-5 uppercase font-bold text-2xl'>
 					<li>
