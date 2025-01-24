@@ -15,7 +15,9 @@ export default function Modal({
 
 	if (!isOpen) return null;
 
-	const handleAddTask = () => {
+	// Handles task addition on form submission
+	const handleAddTask = (e) => {
+		e.preventDefault(); // Prevent page reload
 		if (newTaskTitle.trim() === '') return;
 
 		// Pass all task details to onTaskAdd
@@ -47,7 +49,7 @@ export default function Modal({
 							<span>{task.title}</span>
 							<span>{task.description}</span>
 							<span>{task.dueDate}</span>
-							<div className='flex flex-col gap-1 w-16 text-xs'>
+							<div className='flex gap-2'>
 								<select
 									value={task.status}
 									onChange={(e) =>
@@ -66,7 +68,7 @@ export default function Modal({
 								</select>
 								<button
 									onClick={() => onTaskDelete(task.id)}
-									className='bg-red-500 text-white py-1 rounded w-100'>
+									className='bg-red-500 text-white py-1 px-2 rounded'>
 									Delete
 								</button>
 							</div>
@@ -75,33 +77,35 @@ export default function Modal({
 				</ul>
 
 				{/* Add Task Section */}
-				<div className='mt-4'>
+				<form
+					onSubmit={handleAddTask} // Submit on Enter
+					className='mt-4 flex flex-col gap-2'>
 					<input
 						type='text'
 						placeholder='Task Title'
 						value={newTaskTitle}
 						onChange={(e) => setNewTaskTitle(e.target.value)}
-						className='border rounded px-4 py-2 w-full mb-2'
+						className='border rounded px-4 py-2 w-full'
 					/>
 					<input
 						type='text'
 						placeholder='Task Description'
 						value={newTaskDescription}
 						onChange={(e) => setNewTaskDescription(e.target.value)}
-						className='border rounded px-4 py-2 w-full mb-2'
+						className='border rounded px-4 py-2 w-full'
 					/>
 					<input
 						type='date'
 						value={newTaskDueDate}
 						onChange={(e) => setNewTaskDueDate(e.target.value)}
-						className='border rounded px-4 py-2 w-full mb-2'
+						className='border rounded px-4 py-2 w-full'
 					/>
 					<button
-						onClick={handleAddTask}
+						type='submit' // Submit button
 						className='bg-green-500 text-white px-4 py-2 rounded w-full'>
 						Add Task
 					</button>
-				</div>
+				</form>
 
 				<button
 					onClick={closeModal}

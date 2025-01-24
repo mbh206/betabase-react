@@ -16,6 +16,7 @@ const TaskList = ({ projectId }) => {
 
 	useEffect(() => {
 		const fetchTasks = async () => {
+			if (!projectId) return; // Exit if no projectId is available
 			const taskCollection = collection(db, 'projects', projectId, 'tasks');
 			const taskSnapshot = await getDocs(taskCollection);
 			const taskData = taskSnapshot.docs.map((doc) => ({
@@ -25,6 +26,8 @@ const TaskList = ({ projectId }) => {
 			setTasks(taskData);
 		};
 
+		// Clear tasks before fetching for a new project
+		setTasks([]);
 		fetchTasks();
 	}, [projectId]);
 
@@ -113,7 +116,18 @@ const TaskList = ({ projectId }) => {
 					</li>
 				))}
 			</ul>
-			<div className='flex gap-2'>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					handleAddTask({
+						title: newTask,
+						details: newTaskDetails,
+						status: 'To Do',
+					});
+					setNewTask('');
+					setNewTaskDetails('');
+				}}
+				className='flex gap-2'>
 				<input
 					type='text'
 					value={newTask}
@@ -130,11 +144,11 @@ const TaskList = ({ projectId }) => {
 					className='border p-2 mt-4'
 				/>
 				<button
-					onClick={handleAddTask}
+					type='submit'
 					className='bg-green-500 text-white px-4 py-2 mt-4 rounded'>
 					Add Task
 				</button>
-			</div>
+			</form>
 		</div>
 	);
 };
