@@ -8,77 +8,81 @@ export default function Modal({
 	onTaskAdd,
 	onTaskUpdate,
 	onTaskDelete,
+	onDeleteProject,
 }) {
 	const [newTaskTitle, setNewTaskTitle] = useState('');
 	const [newTaskDescription, setNewTaskDescription] = useState('');
 	const [newTaskDueDate, setNewTaskDueDate] = useState('');
+	const [selectedStep, setSelectedStep] = useState(0);
 
-	if (!isOpen) return null;
+	if (!isOpen || !project) return null;
 
-	// Handles task addition on form submission
+	const steps = project.steps || []; // Ensure steps is always an array
+
 	const handleAddTask = (e) => {
-		e.preventDefault(); // Prevent page reload
+		e.preventDefault();
 		if (newTaskTitle.trim() === '') return;
 
-		// Pass all task details to onTaskAdd
 		onTaskAdd({
 			title: newTaskTitle,
 			description: newTaskDescription,
 			dueDate: newTaskDueDate,
-			status: 'To Do', // Default status
+			step: selectedStep,
+			status: 'To Do',
 		});
 
-		// Clear inputs after adding
 		setNewTaskTitle('');
 		setNewTaskDescription('');
 		setNewTaskDueDate('');
 	};
 
 	return (
-		<div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50'>
-			<div className='bg-white w-11/12 max-w-2xl p-6 rounded shadow-md'>
+		<div className='fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50'>
+			<div
+				onClick={closeModal}
+				className='fixed inset-0 z-0'></div>
+			<div className='bg-white w-11/12 max-w-100 p-3 rounded shadow-md z-50'>
 				<h2 className='text-2xl font-bold mb-4'>{project.name}</h2>
 				<p className='text-gray-600 mb-6'>{project.description}</p>
-
-				<h3 className='text-xl font-semibold mb-4'>Tasks</h3>
-				<ul className='space-y-2 flex flex-col'>
-					{tasks.map((task) => (
-						<li
-							key={task.id}
-							className='p-2 border rounded flex justify-between'>
-							<span>{task.title}</span>
-							<span>{task.description}</span>
-							<span>{task.dueDate}</span>
-							<div className='flex gap-2'>
-								<select
-									value={task.status}
-									onChange={(e) =>
-										onTaskUpdate(task.id, { status: e.target.value })
-									}
-									className={`text-white py-1 rounded text-center ${
-										task.status === 'To Do'
-											? 'bg-blue-500'
-											: task.status === 'In Progress'
-											? 'bg-green-500'
-											: 'bg-gray-500'
-									}`}>
-									<option value='To Do'>To Do</option>
-									<option value='In Progress'>In Progress</option>
-									<option value='Done'>Done</option>
-								</select>
-								<button
-									onClick={() => onTaskDelete(task.id)}
-									className='bg-red-500 text-white py-1 px-2 rounded'>
-									Delete
-								</button>
-							</div>
-						</li>
+				<div className='flex gap-2 overflow-x-scroll justify-between'>
+					{steps.map((step, index) => (
+						<button
+							key={index}
+							className={`px-2 py-1 rounded text-xs ${
+								index === selectedStep
+									? 'bg-blue-500 text-white'
+									: 'bg-gray-200'
+							}`}
+							onClick={() => setSelectedStep(index)}>
+							{step.title}
+						</button>
 					))}
-				</ul>
+				</div>
+				<div className='mt-4'>
+					<h3 className='text-lg font-bold'>{steps[selectedStep]?.title}</h3>
+					<p>
+						{steps[selectedStep]?.description || 'No description available.'}
+					</p>
 
-				{/* Add Task Section */}
+					{/* Render tasks related to this step */}
+					<ul>
+						{tasks
+							.filter((task) => task.step === selectedStep)
+							.map((task) => (
+								<li
+									key={task.id}
+									className='flex justify-between'>
+									<span>{task.title}</span>
+									<span>{task.description}</span>
+									<span>{task.dueDate ? task.dueDate : 'No Due Date'}</span>
+								</li>
+							))}
+					</ul>
+				</div>
+
+				{/* Task Management */}
 				<form
-					onSubmit={handleAddTask} // Submit on Enter
+					onSubmit={handleAddTask}
 					className='mt-4 flex flex-col gap-2'>
 					<input
 						type='text'
@@ -101,17 +105,27 @@ export default function Modal({
 						className='border rounded px-4 py-2 w-full'
 					/>
 					<button
-						type='submit' // Submit button
+						type='submit'
 						className='bg-green-500 text-white px-4 py-2 rounded w-full'>
 						Add Task
 					</button>
 				</form>
 
-				<button
-					onClick={closeModal}
-					className='mt-6 bg-gray-500 text-white px-4 py-2 rounded'>
-					Close
-				</button>
+				<div className='flex justify-between'>
+					<button
+						onClick={closeModal}
+						className='mt-6 bg-gray-500 text-white px-4 py-2 rounded'>
+						Close
+					</button>
+					<button
+						onClick={() => {
+							onDeleteProject(project.id);
+							closeModal();
+						}}
+						className='mt-6 bg-red-700 text-white px-4 py-2 rounded'>
+						Delete Project
+					</button>
+				</div>
 			</div>
 		</div>
 	);
