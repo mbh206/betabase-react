@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import KanbanBoard from './KanbanBoard';
+import {
+	doc,
+	getDoc,
+	collection,
+	addDoc,
+	updateDoc,
+	deleteDoc,
+} from 'firebase/firestore';
 import TaskList from './TaskList';
 
 export default function ProjectDetail() {
-	const { name, id } = useParams();
+	const { id } = useParams();
 	const navigate = useNavigate();
 	const [project, setProject] = useState(null);
+	const [tasks, setTasks] = useState(null);
 	const [editing, setEditing] = useState(false);
 	const [updatedProject, setUpdatedProject] = useState({
 		name: '',
@@ -37,6 +44,12 @@ export default function ProjectDetail() {
 		await updateDoc(docRef, updatedProject);
 		setProject({ ...project, ...updatedProject });
 		setEditing(false);
+	};
+
+	const handleTaskAdd = async (taskDetails) => {
+		const taskRef = collection(db, 'projects', id, 'tasks');
+		const newTask = await addDoc(taskRef, taskDetails);
+		setTasks((prev) => [...prev, { id: newTask.id, ...taskDetails }]);
 	};
 
 	const handleDelete = async () => {

@@ -2,265 +2,511 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import {
 	collection,
-	getDocs,
 	doc,
-	deleteDoc,
+	getDocs,
 	updateDoc,
+	deleteDoc,
 	addDoc,
 } from 'firebase/firestore';
-import Modal from './Modal';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 export default function Home() {
 	const [projects, setProjects] = useState([]);
-	const [newProject, setNewProject] = useState({ name: '', description: '' });
+	const [newProjectName, setNewProjectName] = useState('');
+	const [newProjectDescription, setNewProjectDescription] = useState('');
+	const [editingProject, setEditingProject] = useState(null);
 	const [selectedProject, setSelectedProject] = useState(null);
-	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [selectedStep, setSelectedStep] = useState(0);
 	const [tasks, setTasks] = useState([]);
-	const [showConfirmation, setShowConfirmation] = useState(false);
+	const [newTaskTitle, setNewTaskTitle] = useState('');
+	const [filterPriority, setFilterPriority] = useState('');
+	const [filterSearch, setFilterSearch] = useState('');
+	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // New state for sidebar collapse
 
 	useEffect(() => {
 		const fetchProjects = async () => {
-			const projectsCollection = collection(db, 'projects');
-			const projectsSnapshot = await getDocs(projectsCollection);
+			const projSnapshot = await getDocs(collection(db, 'projects'));
+			const fetchedProjects = projSnapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			}));
 
-			const projectsData = await Promise.all(
-				projectsSnapshot.docs.map(async (doc) => {
-					const project = { id: doc.id, ...doc.data() };
-					const tasksCollection = collection(
-						db,
-						'projects',
-						project.id,
-						'tasks'
-					);
-					const tasksSnapshot = await getDocs(tasksCollection);
+			// Attach tasks to each project
+			const allTasks = [];
+			for (let project of fetchedProjects) {
+				const tasksSnap = await getDocs(
+					collection(db, 'projects', project.id, 'tasks')
+				);
+				const projectTasks = tasksSnap.docs.map((taskDoc) => ({
+					id: taskDoc.id,
+					...taskDoc.data(),
+					projectId: project.id,
+				}));
+				project.tasks = projectTasks;
+				allTasks.push(...projectTasks);
+			}
 
-					project.tasks = tasksSnapshot.docs.map((taskDoc) => ({
-						id: taskDoc.id,
-						...taskDoc.data(),
-					}));
-
-					const stepsCollection = collection(
-						db,
-						'projects',
-						project.id,
-						'steps'
-					);
-					const stepsSnapshot = await getDocs(stepsCollection);
-					project.steps = stepsSnapshot.docs.map((stepDoc) => ({
-						id: stepDoc.id,
-						...stepDoc.data(),
-					}));
-
-					// Ensure steps is always an array
-					project.steps = project.steps.length ? project.steps : [];
-
-					return project;
-				})
-			);
-
-			setProjects(projectsData);
+			setProjects(fetchedProjects);
 		};
 
 		fetchProjects();
 	}, []);
 
-	const handleOpenModal = async (projectId) => {
-		const project = projects.find((p) => p.id === projectId);
-
-		// Fetch tasks for the selected project
-		const tasksCollection = collection(db, 'projects', projectId, 'tasks');
-		const tasksSnapshot = await getDocs(tasksCollection);
-		const tasksData = tasksSnapshot.docs.map((doc) => ({
-			id: doc.id,
-			...doc.data(),
-		}));
-
-		// Fetch steps for the selected project
-		const stepsCollection = collection(db, 'projects', projectId, 'steps');
-		const stepsSnapshot = await getDocs(stepsCollection);
-		const stepsData = stepsSnapshot.docs
-			.map((doc) => ({
-				id: doc.id,
-				...doc.data(),
-			}))
-			.sort((a, b) => a.order - b.order); // Ensure steps are sorted by order
-
-		// Add steps to the selected project
-		setSelectedProject({ ...project, steps: stepsData });
-		setTasks(tasksData);
-		setIsModalOpen(true);
+	const handleSelectProject = (project) => {
+		setSelectedProject(project);
+		setSelectedStep(0);
+		setTasks(project.tasks || []);
+		setIsSidebarCollapsed(false); // Expand sidebar when a project is selected
 	};
 
-	const handleCloseModal = () => {
-		setSelectedProject(null);
-		setIsModalOpen(false);
-	};
-
-	const handleAddProject = async (name, description = '') => {
-		if (!name.trim()) return;
+	const handleAddProject = async () => {
+		if (!newProjectName.trim()) return;
 
 		try {
 			const projectRef = collection(db, 'projects');
 			const newProject = {
-				name,
-				description,
-				createdAt: new Date(),
+				name: newProjectName,
+				description: newProjectDescription,
 				steps: [
-					'Ideation & Market Research',
-					'Requirements Gathering & Planning',
-					'UX/UI Design & Prototyping',
-					'Development (MVP Build)',
-					'Testing & Quality Assurance',
-					'Preparations for Beta Launch',
-					'Beta Testing & Iteration',
-				].map((step, index) => ({
-					title: step,
-					completed: false,
-					order: index + 1,
-				})),
+					{ title: 'Ideation', completed: false },
+					{ title: 'Development', completed: false },
+					{ title: 'Testing', completed: false },
+				],
+				createdAt: new Date(),
 			};
-			const projectDoc = await addDoc(projectRef, newProject);
+			const docRef = await addDoc(projectRef, newProject);
 
-			setNewProject({ name: '', description: '' });
-			setProjects((prev) => [...prev, { id: projectDoc.id, ...newProject }]);
-			setShowConfirmation(true);
-			setTimeout(() => setShowConfirmation(false), 2000);
+			setProjects([...projects, { id: docRef.id, ...newProject }]);
+			setNewProjectName('');
+			setNewProjectDescription('');
 		} catch (error) {
 			console.error('Error adding project:', error);
+		}
+	};
+
+	const handleEditProject = async (projectId, updatedFields) => {
+		try {
+			const projectRef = doc(db, 'projects', projectId);
+			await updateDoc(projectRef, updatedFields);
+
+			setProjects((prevProjects) =>
+				prevProjects.map((project) =>
+					project.id === projectId ? { ...project, ...updatedFields } : project
+				)
+			);
+			setEditingProject(null);
+		} catch (error) {
+			console.error('Error updating project:', error);
 		}
 	};
 
 	const handleDeleteProject = async (projectId) => {
 		try {
 			await deleteDoc(doc(db, 'projects', projectId));
-			setProjects((prev) => prev.filter((project) => project.id !== projectId));
+			setProjects((prevProjects) =>
+				prevProjects.filter((project) => project.id !== projectId)
+			);
 		} catch (error) {
 			console.error('Error deleting project:', error);
 		}
 	};
 
-	const getDaysSinceCreation = (createdAt) => {
-		if (!createdAt) return 'N/A';
-		const createdDate = createdAt.toDate
-			? createdAt.toDate()
-			: new Date(createdAt);
-		const diffTime = Math.abs(new Date() - createdDate);
-		return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+	const calculateStepProgress = (stepIndex) => {
+		const stepTasks = tasks.filter((task) => task.step === stepIndex);
+		const completedTasks = stepTasks.filter(
+			(task) => task.status === 'Done'
+		).length;
+		return stepTasks.length > 0
+			? Math.round((completedTasks / stepTasks.length) * 100)
+			: 0;
 	};
 
-	const calculateStepProgress = (steps) => {
-		if (!Array.isArray(steps) || steps.length === 0) return 0;
-		const completedSteps = steps.filter((step) => step.completed).length;
-		return Math.round((completedSteps / steps.length) * 100);
+	const filteredTasks = tasks
+		.filter((task) => task.step === selectedStep)
+		.filter((task) =>
+			filterPriority ? task.priority === filterPriority : true
+		)
+		.filter((task) =>
+			task.title.toLowerCase().includes(filterSearch.toLowerCase())
+		)
+		.sort((a, b) => a.order - b.order);
+
+	const handleDragEnd = async (result) => {
+		if (!result.destination) return;
+
+		const { source, destination } = result;
+		const draggedTask = tasks[source.index];
+
+		// If moved within the same step, reorder tasks
+		if (source.droppableId === destination.droppableId) {
+			const updatedTasks = Array.from(tasks);
+			const [movedTask] = updatedTasks.splice(source.index, 1);
+			updatedTasks.splice(destination.index, 0, movedTask);
+			setTasks(updatedTasks);
+
+			// Update Firestore with the new order
+			await updateTaskOrder(updatedTasks);
+		} else {
+			// If moved to a new step, update the task's step
+			await updateTaskStep(draggedTask.id, parseInt(destination.droppableId));
+		}
 	};
 
-	const updateStepCompletion = async (stepIndex) => {
-		const tasksInStep = tasks.filter((task) => task.step === stepIndex);
-		const isComplete = tasksInStep.every((task) => task.status === 'Done');
+	const updateTaskOrder = async (updatedTasks) => {
+		try {
+			const batch = updatedTasks.map((task, index) => ({
+				id: task.id,
+				order: index,
+			}));
 
-		const projectRef = doc(db, 'projects', selectedProject.id);
-		await updateDoc(projectRef, {
-			[`steps.${stepIndex}.completed`]: isComplete,
-		});
-
-		setProjects((prev) =>
-			prev.map((project) =>
-				project.id === selectedProject.id
-					? {
-							...project,
-							steps: project.steps.map((step, index) =>
-								index === stepIndex ? { ...step, completed: isComplete } : step
-							),
-					  }
-					: project
-			)
-		);
+			// Update Firestore with the new order
+			for (const task of batch) {
+				const taskRef = doc(
+					db,
+					'projects',
+					selectedProject.id,
+					'tasks',
+					task.id
+				);
+				await updateDoc(taskRef, { order: task.order });
+			}
+		} catch (error) {
+			console.error('Error updating task order:', error);
+		}
 	};
 
-	const handleAddTask = async (taskDetails) => {
-		if (!selectedProject) return;
+	const updateTaskStep = async (taskId, newStepIndex) => {
+		try {
+			const taskRef = doc(db, 'projects', selectedProject.id, 'tasks', taskId);
+			await updateDoc(taskRef, { step: newStepIndex });
 
+			setTasks((prevTasks) =>
+				prevTasks.map((task) =>
+					task.id === taskId ? { ...task, step: newStepIndex } : task
+				)
+			);
+		} catch (error) {
+			console.error('Error updating task step:', error);
+		}
+	};
+
+	const handleAddTask = async (priority) => {
+		if (!newTaskTitle.trim()) return;
 		try {
 			const taskRef = collection(db, 'projects', selectedProject.id, 'tasks');
-			const taskDoc = await addDoc(taskRef, taskDetails);
+			const newTask = {
+				title: newTaskTitle,
+				description: '',
+				dueDate: '',
+				step: selectedStep,
+				status: 'To Do',
+				priority: priority || 'Medium',
+				order: tasks.length, // Add this line
+			};
+			const docRef = await addDoc(taskRef, newTask);
 
-			setTasks((prev) => [...prev, { id: taskDoc.id, ...taskDetails }]);
-			updateStepCompletion(taskDetails.step);
+			setTasks([...tasks, { ...newTask, id: docRef.id }]);
+			setNewTaskTitle('');
 		} catch (error) {
 			console.error('Error adding task:', error);
 		}
 	};
 
-	return (
-		<div className='p-4'>
-			<h3>Add New Project</h3>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					handleAddProject(newProject.name, newProject.description);
-				}}>
-				<input
-					type='text'
-					placeholder='Project Name'
-					value={newProject.name}
-					onChange={(e) =>
-						setNewProject({ ...newProject, name: e.target.value })
-					}
-				/>
-				<input
-					type='text'
-					placeholder='Description'
-					value={newProject.description}
-					onChange={(e) =>
-						setNewProject({ ...newProject, description: e.target.value })
-					}
-				/>
-				<button type='submit'>Add Project</button>
-			</form>
+	const handleEditTask = async (taskId, field, value) => {
+		try {
+			const taskRef = doc(db, 'projects', selectedProject.id, 'tasks', taskId);
+			await updateDoc(taskRef, { [field]: value });
 
-			<h3>My Projects</h3>
-			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
-				{projects.map((project) => (
-					<div
-						key={project.id}
-						onClick={() => handleOpenModal(project.id)}
-						className='p-4 bg-white shadow-md hover:shadow-xl transition duration-300 rounded border flex flex-col justify-between'>
-						<div className='flex justify-between items-center'>
-							<h2 className='text-xl font-semibold'>{project.name}</h2>
-							<div className='mt-4 w-50'>
-								<div className='h-2 bg-gray-200 rounded'>
-									<div
-										className='h-full bg-blue-500 rounded'
-										style={{
-											width: `${calculateStepProgress(project.steps)}%`,
-										}}></div>
-								</div>
-								<p className='text-sm text-gray-600 mt-1'>
-									Step{' '}
-									{project.steps?.filter((step) => step.completed).length || 0}{' '}
-									of {project.steps?.length || 7}
-								</p>
+			setTasks((prevTasks) =>
+				prevTasks.map((task) =>
+					task.id === taskId ? { ...task, [field]: value } : task
+				)
+			);
+		} catch (error) {
+			console.error('Error updating task:', error);
+		}
+	};
+
+	return (
+		<div className='flex h-screen'>
+			{/* Sidebar */}
+			{selectedProject && (
+				<div
+					className={`bg-gray-800 text-white p-4 transition-all duration-300 ${
+						isSidebarCollapsed ? 'w-16' : 'w-64'
+					}`}>
+					{/* Toggle Button */}
+					<button
+						onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+						className='mb-4 text-white'>
+						{isSidebarCollapsed ? '☰' : '✕'}
+					</button>
+
+					{/* Sidebar Content */}
+					{!isSidebarCollapsed && (
+						<>
+							<h2 className='text-xl font-semibold mb-4'>Projects</h2>
+							<ul>
+								{projects.map((project) => (
+									<li
+										key={project.id}
+										className={`cursor-pointer p-2 rounded ${
+											selectedProject?.id === project.id
+												? 'bg-gray-600'
+												: 'hover:bg-gray-700'
+										}`}
+										onClick={() => handleSelectProject(project)}>
+										{project.name}
+										<button
+											onClick={(e) => {
+												e.stopPropagation();
+												setEditingProject(project);
+											}}
+											className='ml-2 text-sm text-blue-500'>
+											Edit
+										</button>
+										<button
+											onClick={(e) => {
+												e.stopPropagation();
+												handleDeleteProject(project.id);
+											}}
+											className='ml-2 text-sm text-red-500'>
+											Delete
+										</button>
+									</li>
+								))}
+							</ul>
+							<div className='mt-4'>
+								<input
+									type='text'
+									placeholder='New Project Name'
+									value={newProjectName}
+									onChange={(e) => setNewProjectName(e.target.value)}
+									className='border p-2 rounded w-full mb-2 text-gray-500'
+								/>
+								<input
+									type='text'
+									placeholder='Description'
+									value={newProjectDescription}
+									onChange={(e) => setNewProjectDescription(e.target.value)}
+									className='border p-2 rounded w-full mb-2 text-gray-500'
+								/>
+								<button
+									onClick={handleAddProject}
+									className='bg-green-500 text-white px-4 py-2 rounded w-full'>
+									Add Project
+								</button>
+							</div>
+						</>
+					)}
+				</div>
+			)}
+
+			{/* Main Workspace */}
+			<div
+				className={`flex-1 p-6 bg-gray-100 transition-all duration-300 ${
+					selectedProject ? (isSidebarCollapsed ? 'ml-0' : 'ml-0') : ''
+				}`}>
+				{selectedProject ? (
+					<>
+						{/* Project Header */}
+						<div className='flex justify-between items-center mb-4'>
+							<h2 className='text-2xl font-bold'>{selectedProject.name}</h2>
+							<button
+								onClick={() => setSelectedProject(null)}
+								className='bg-red-500 text-white px-4 py-2 rounded'>
+								Back to Projects
+							</button>
+						</div>
+
+						{/* Step Tabs & Progress */}
+						<div className='flex space-x-4 border-b mb-4'>
+							{selectedProject.steps.map((step, index) => (
+								<button
+									key={index}
+									className={`px-4 py-2 border-b-2 ${
+										selectedStep === index
+											? 'border-blue-500 text-blue-500 font-bold'
+											: 'border-transparent'
+									}`}
+									onClick={() => setSelectedStep(index)}>
+									{step.title} ({calculateStepProgress(index)}%)
+								</button>
+							))}
+						</div>
+
+						{/* Filters */}
+						<div className='flex space-x-4 mb-4'>
+							<select
+								value={filterPriority}
+								onChange={(e) => setFilterPriority(e.target.value)}
+								className='border p-2 rounded'>
+								<option value=''>All Priorities</option>
+								<option value='High'>🔴 High</option>
+								<option value='Medium'>🟠 Medium</option>
+								<option value='Low'>🟢 Low</option>
+							</select>
+							<input
+								type='text'
+								placeholder='Search Tasks'
+								value={filterSearch}
+								onChange={(e) => setFilterSearch(e.target.value)}
+								className='border p-2 rounded'
+							/>
+						</div>
+
+						{/* Drag-and-Drop Task List */}
+						<DragDropContext onDragEnd={handleDragEnd}>
+							<Droppable droppableId={String(selectedStep)}>
+								{(provided) => (
+									<ul
+										ref={provided.innerRef}
+										{...provided.droppableProps}
+										className='space-y-2 mt-2'>
+										{filteredTasks.map((task, index) => (
+											<Draggable
+												key={task.id}
+												draggableId={task.id}
+												index={index}>
+												{(provided) => (
+													<li
+														ref={provided.innerRef}
+														{...provided.draggableProps}
+														{...provided.dragHandleProps}
+														className='bg-white p-4 rounded shadow flex justify-between items-center'>
+														<span>{task.title}</span>
+														<span
+															className={`text-sm font-semibold ${
+																task.priority === 'High'
+																	? 'text-red-500'
+																	: task.priority === 'Medium'
+																	? 'text-orange-500'
+																	: 'text-green-500'
+															}`}>
+															{task.priority}
+														</span>
+														<select
+															value={task.status}
+															onChange={(e) =>
+																handleEditTask(
+																	task.id,
+																	'status',
+																	e.target.value
+																)
+															}
+															className={`text-white py-1 px-2 rounded ${
+																task.status === 'To Do'
+																	? 'bg-blue-500'
+																	: task.status === 'In Progress'
+																	? 'bg-green-500'
+																	: 'bg-gray-500'
+															}`}>
+															<option value='To Do'>To Do</option>
+															<option value='In Progress'>In Progress</option>
+															<option value='Done'>Done</option>
+														</select>
+													</li>
+												)}
+											</Draggable>
+										))}
+										{provided.placeholder}
+									</ul>
+								)}
+							</Droppable>
+						</DragDropContext>
+
+						{/* Quick Add Task Form */}
+						<div className='mt-4'>
+							<input
+								type='text'
+								placeholder='New Task'
+								value={newTaskTitle}
+								onChange={(e) => setNewTaskTitle(e.target.value)}
+								className='border p-2 rounded w-full'
+								onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+							/>
+							<div className='flex space-x-2 mt-2'>
+								<button
+									onClick={() => handleAddTask('High')}
+									className='bg-red-500 text-white px-4 py-2 rounded'>
+									Add High Priority
+								</button>
+								<button
+									onClick={() => handleAddTask('Medium')}
+									className='bg-orange-500 text-white px-4 py-2 rounded'>
+									Add Medium Priority
+								</button>
+								<button
+									onClick={() => handleAddTask('Low')}
+									className='bg-green-500 text-white px-4 py-2 rounded'>
+									Add Low Priority
+								</button>
 							</div>
 						</div>
-						<p className='text-gray-600'>
-							{project.description || 'No description provided.'}
-						</p>
-						<div className='flex justify-between'>
-							<p className='text-gray-400 text-xs'>
-								Created {getDaysSinceCreation(project.createdAt)} days ago
-							</p>
+					</>
+				) : (
+					<>
+						{/* Initial Load: Show All Projects as Cards */}
+						<h2 className='text-2xl font-bold mb-4'>All Projects</h2>
+						<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+							{projects.map((project) => (
+								<div
+									key={project.id}
+									onClick={() => handleSelectProject(project)}
+									className='bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition-shadow'>
+									<h3 className='text-xl font-semibold'>{project.name}</h3>
+									<p className='text-gray-600'>{project.description}</p>
+								</div>
+							))}
 						</div>
-					</div>
-				))}
+					</>
+				)}
 			</div>
 
-			<Modal
-				isOpen={isModalOpen}
-				closeModal={handleCloseModal}
-				project={selectedProject}
-				tasks={tasks}
-				onTaskAdd={handleAddTask}
-			/>
+			{/* Edit Project Modal */}
+			{editingProject && (
+				<div className='fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50'>
+					<div className='bg-white w-11/12 max-w-2xl p-6 rounded shadow-md'>
+						<h2 className='text-2xl font-bold mb-4'>Edit Project</h2>
+						<input
+							type='text'
+							placeholder='Project Name'
+							value={editingProject.name}
+							onChange={(e) =>
+								setEditingProject({ ...editingProject, name: e.target.value })
+							}
+							className='border p-2 rounded w-full mb-2'
+						/>
+						<input
+							type='text'
+							placeholder='Description'
+							value={editingProject.description}
+							onChange={(e) =>
+								setEditingProject({
+									...editingProject,
+									description: e.target.value,
+								})
+							}
+							className='border p-2 rounded w-full mb-2'
+						/>
+						<button
+							onClick={() =>
+								handleEditProject(editingProject.id, {
+									name: editingProject.name,
+									description: editingProject.description,
+								})
+							}
+							className='bg-blue-500 text-white px-4 py-2 rounded'>
+							Save Changes
+						</button>
+						<button
+							onClick={() => setEditingProject(null)}
+							className='bg-gray-500 text-white px-4 py-2 rounded ml-2'>
+							Cancel
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
