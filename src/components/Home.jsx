@@ -19,9 +19,11 @@ export default function Home() {
 	const [selectedStep, setSelectedStep] = useState(0);
 	const [tasks, setTasks] = useState([]);
 	const [newTaskTitle, setNewTaskTitle] = useState('');
+	const [newTaskDescription, setNewTaskDescription] = useState('');
 	const [filterPriority, setFilterPriority] = useState('');
 	const [filterSearch, setFilterSearch] = useState('');
-	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // New state for sidebar collapse
+	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+	const [isTaskHintCollapsed, setIsTaskHintCollapsed] = useState(false);
 
 	useEffect(() => {
 		const fetchProjects = async () => {
@@ -56,6 +58,7 @@ export default function Home() {
 		setSelectedStep(0);
 		setTasks(project.tasks || []);
 		setIsSidebarCollapsed(false);
+		setIsTaskHintCollapsed(false);
 	};
 
 	const handleAddProject = async () => {
@@ -285,6 +288,9 @@ export default function Home() {
 			const updatedTasks = Array.from(tasks);
 			const [movedTask] = updatedTasks.splice(source.index, 1);
 			updatedTasks.splice(destination.index, 0, movedTask);
+			updatedTasks.forEach((t, i) => {
+				t.order = i;
+			});
 			setTasks(updatedTasks);
 
 			await updateTaskOrder(updatedTasks);
@@ -336,7 +342,7 @@ export default function Home() {
 			const taskRef = collection(db, 'projects', selectedProject.id, 'tasks');
 			const newTask = {
 				title: newTaskTitle,
-				description: '',
+				description: newTaskDescription,
 				dueDate: '',
 				step: selectedStep,
 				status: 'To Do',
@@ -347,6 +353,7 @@ export default function Home() {
 
 			setTasks([...tasks, { ...newTask, id: docRef.id }]);
 			setNewTaskTitle('');
+			setNewTaskDescription('');
 		} catch (error) {
 			console.error('Error adding task:', error);
 		}
@@ -367,6 +374,15 @@ export default function Home() {
 		}
 	};
 
+	const handleDeleteTask = async (taskId) => {
+		try {
+			await deleteDoc(doc(db, 'projects', selectedProject.id, 'tasks', taskId));
+			setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+		} catch (error) {
+			console.error('Error deleting task:', error);
+		}
+	};
+
 	return (
 		<div className='flex h-screen'>
 			{/* Sidebar */}
@@ -379,7 +395,35 @@ export default function Home() {
 					<button
 						onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
 						className='mb-4 text-white'>
-						{isSidebarCollapsed ? '>' : '<'}
+						{isSidebarCollapsed ? (
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={1.5}
+								stroke='currentColor'
+								className='size-6'>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5'
+								/>
+							</svg>
+						) : (
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={1.5}
+								stroke='currentColor'
+								className='size-6'>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5'
+								/>
+							</svg>
+						)}
 					</button>
 
 					{/* Sidebar Content */}
@@ -390,29 +434,31 @@ export default function Home() {
 								{projects.map((project) => (
 									<li
 										key={project.id}
-										className={`cursor-pointer p-2 rounded ${
+										className={`cursor-pointer p-2 rounded flex justify-between ${
 											selectedProject?.id === project.id
 												? 'bg-gray-600'
 												: 'hover:bg-gray-700'
 										}`}
 										onClick={() => handleSelectProject(project)}>
 										{project.name}
-										<button
-											onClick={(e) => {
-												e.stopPropagation();
-												setEditingProject(project);
-											}}
-											className='ml-2 text-sm text-blue-500'>
-											Edit
-										</button>
-										<button
-											onClick={(e) => {
-												e.stopPropagation();
-												handleDeleteProject(project.id);
-											}}
-											className='ml-2 text-sm text-red-500'>
-											Delete
-										</button>
+										<span>
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													setEditingProject(project);
+												}}
+												className='bg-teal-500 text-white text-xs mr-2 px-1 py-1 rounded'>
+												Edit
+											</button>
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													handleDeleteProject(project.id);
+												}}
+												className='bg-red-500 text-white text-xs px-1 py-1 rounded'>
+												Delete
+											</button>
+										</span>
 									</li>
 								))}
 							</ul>
@@ -437,6 +483,11 @@ export default function Home() {
 									Add Project
 								</button>
 							</div>
+							<button
+								onClick={() => setSelectedProject(null)}
+								className='bg-orange-500 text-white mt-2 px-4 py-2 rounded w-full'>
+								Back to Projects
+							</button>
 						</>
 					)}
 				</div>
@@ -449,11 +500,24 @@ export default function Home() {
 						{/* Project Header */}
 						<div className='flex justify-between items-center mb-4'>
 							<h2 className='text-2xl font-bold'>{selectedProject.name}</h2>
-							<button
-								onClick={() => setSelectedProject(null)}
-								className='bg-red-500 text-white px-4 py-2 rounded'>
-								Back to Projects
-							</button>
+							<span>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										setEditingProject(selectedProject);
+									}}
+									className='bg-teal-500 text-white text-sm mr-2 px-2 py-1 rounded'>
+									Edit
+								</button>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										handleDeleteProject(selectedProject.id);
+									}}
+									className='bg-red-500 text-white text-sm mr-2 px-2 py-1 rounded'>
+									Delete
+								</button>
+							</span>
 						</div>
 
 						{/* Step Tabs & Progress */}
@@ -479,32 +543,70 @@ export default function Home() {
 									const currentStepData = selectedProject.steps[selectedStep];
 									return (
 										<>
-											<div className='flex flex-col bg-gray-200 p-4 mb-4 rounded text-xs gap-2'>
-												<h3>
+											<div
+												className={`flex flex-col bg-gray-200 p-4 mb-4 rounded text-xs gap-2 ${
+													isTaskHintCollapsed ? 'h-12' : ''
+												}`}>
+												<h3 className='flex justify-between'>
 													<strong>Typical Tasks for this step</strong>
-												</h3>
-												<ul className='list-inside'>
-													{currentStepData.tasks?.map(
-														(guideTask, guideIndex) => {
-															// If guideTask is just a string:
-															if (typeof guideTask === 'string') {
-																return <li key={guideIndex}>{guideTask}</li>;
-															}
-															// If guideTask is an object, e.g. { "Define Key Features": "..." }
-															else if (typeof guideTask === 'object') {
-																// Extract key/value
-																return Object.entries(guideTask).map(
-																	([title, description]) => (
-																		<li key={title}>
-																			<strong>{title}:</strong> {description}
-																		</li>
-																	)
-																);
-															}
-															return null;
+													<button
+														onClick={() =>
+															setIsTaskHintCollapsed(!isTaskHintCollapsed)
 														}
-													)}
-												</ul>
+														className='mb-4 text-gray-500'>
+														{isTaskHintCollapsed ? (
+															<svg
+																xmlns='http://www.w3.org/2000/svg'
+																fill='none'
+																viewBox='0 0 24 24'
+																strokeWidth={1.5}
+																stroke='currentColor'
+																className='size-6'>
+																<path
+																	strokeLinecap='round'
+																	strokeLinejoin='round'
+																	d='M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'
+																/>
+															</svg>
+														) : (
+															<svg
+																xmlns='http://www.w3.org/2000/svg'
+																fill='none'
+																viewBox='0 0 24 24'
+																strokeWidth={1.5}
+																stroke='currentColor'
+																className='size-6'>
+																<path
+																	strokeLinecap='round'
+																	strokeLinejoin='round'
+																	d='m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
+																/>
+															</svg>
+														)}
+													</button>
+												</h3>
+												{!isTaskHintCollapsed ? (
+													<ul className='list-inside'>
+														{currentStepData.tasks?.map(
+															(guideTask, guideIndex) => {
+																if (typeof guideTask === 'string') {
+																	return <li key={guideIndex}>{guideTask}</li>;
+																} else if (typeof guideTask === 'object') {
+																	return Object.entries(guideTask).map(
+																		([title, description]) => (
+																			<li key={title}>
+																				<strong>{title}:</strong> {description}
+																			</li>
+																		)
+																	);
+																}
+																return null;
+															}
+														)}
+													</ul>
+												) : (
+													''
+												)}
 											</div>
 											{/* Filters */}
 											<div className='flex space-x-4 mb-4'>
@@ -525,10 +627,11 @@ export default function Home() {
 													className='border p-2 rounded'
 												/>
 											</div>
+											{/* DRAGGABLE TASKS */}
 											<ul
 												ref={provided.innerRef}
 												{...provided.droppableProps}
-												className='space-y-2 mt-2'>
+												className='space-y-2'>
 												{filteredTasks.map((task, index) => (
 													<Draggable
 														key={task.id}
@@ -540,39 +643,100 @@ export default function Home() {
 																{...provided.draggableProps}
 																{...provided.dragHandleProps}
 																className='bg-white p-4 rounded shadow flex justify-between items-center'>
-																<span>{task.title}:</span>
-																<span
-																	className={`text-sm font-semibold ${
+																{/* Task Title */}
+																<div>
+																	<span className='mr-3 font-medium'>
+																		{task.title}:
+																	</span>
+																	<span className='mr-3'>
+																		{task.description
+																			? task.description
+																			: 'No description yet'}
+																	</span>
+																</div>
+																{/* Priority Dropdown (color-coded) */}
+																<select
+																	value={task.priority}
+																	onChange={(e) =>
+																		handleEditTask(
+																			task.id,
+																			'priority',
+																			e.target.value
+																		)
+																	}
+																	className={`text-sm font-semibold mx-2 ${
 																		task.priority === 'High'
 																			? 'text-red-500'
 																			: task.priority === 'Medium'
 																			? 'text-orange-500'
 																			: 'text-green-500'
 																	}`}>
-																	{task.priority}
-																</span>
-																<select
-																	value={task.status}
-																	onChange={(e) =>
-																		handleEditTask(
-																			task.id,
-																			'status',
-																			e.target.value
-																		)
-																	}
-																	className={`text-white py-1 px-2 rounded ${
-																		task.status === 'To Do'
-																			? 'bg-blue-500'
-																			: task.status === 'In Progress'
-																			? 'bg-green-500'
-																			: 'bg-gray-500'
-																	}`}>
-																	<option value='To Do'>To Do</option>
-																	<option value='In Progress'>
-																		In Progress
+																	<option
+																		value='High'
+																		className='text-red-500'>
+																		High
 																	</option>
-																	<option value='Done'>Done</option>
+																	<option
+																		value='Medium'
+																		className='text-orange-500'>
+																		Medium
+																	</option>
+																	<option
+																		value='Low'
+																		className='text-green-500'>
+																		Low
+																	</option>
 																</select>
+
+																{/* Status Dropdown */}
+																<div className='flex items-center'>
+																	<select
+																		value={task.status}
+																		onChange={(e) =>
+																			handleEditTask(
+																				task.id,
+																				'status',
+																				e.target.value
+																			)
+																		}
+																		className={`text-white py-1 px-2 rounded ${
+																			task.status === 'To Do'
+																				? 'bg-blue-500'
+																				: task.status === 'In Progress'
+																				? 'bg-green-500'
+																				: 'bg-gray-500'
+																		}`}>
+																		<option value='To Do'>To Do</option>
+																		<option value='In Progress'>
+																			In Progress
+																		</option>
+																		<option value='Done'>Done</option>
+																	</select>
+
+																	{/* Delete Button */}
+																	<button
+																		className='ml-3'
+																		onClick={() => handleDeleteTask(task.id)}>
+																		<svg
+																			xmlns='http://www.w3.org/2000/svg'
+																			fill='none'
+																			viewBox='0 0 24 24'
+																			strokeWidth={1.5}
+																			stroke='currentColor'
+																			className='size-7 text-white bg-red-500 rounded p-1'>
+																			<path
+																				strokeLinecap='round'
+																				strokeLinejoin='round'
+																				d='m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
+                    c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244
+                    2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108
+                    0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0
+                    0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0
+                    0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0'
+																			/>
+																		</svg>
+																	</button>
+																</div>
 															</li>
 														)}
 													</Draggable>
@@ -589,9 +753,17 @@ export default function Home() {
 						<div className='mt-4'>
 							<input
 								type='text'
-								placeholder='New Task'
+								placeholder='New Task Name'
 								value={newTaskTitle}
 								onChange={(e) => setNewTaskTitle(e.target.value)}
+								className='border p-2 rounded w-full'
+								onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+							/>
+							<input
+								type='text'
+								placeholder='New Task Description'
+								value={newTaskDescription}
+								onChange={(e) => setNewTaskDescription(e.target.value)}
 								className='border p-2 rounded w-full'
 								onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
 							/>
