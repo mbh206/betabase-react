@@ -31,7 +31,6 @@ export default function Home() {
 				...doc.data(),
 			}));
 
-			// Attach tasks to each project
 			const allTasks = [];
 			for (let project of fetchedProjects) {
 				const tasksSnap = await getDocs(
@@ -56,7 +55,7 @@ export default function Home() {
 		setSelectedProject(project);
 		setSelectedStep(0);
 		setTasks(project.tasks || []);
-		setIsSidebarCollapsed(false); // Expand sidebar when a project is selected
+		setIsSidebarCollapsed(false);
 	};
 
 	const handleAddProject = async () => {
@@ -68,9 +67,154 @@ export default function Home() {
 				name: newProjectName,
 				description: newProjectDescription,
 				steps: [
-					{ title: 'Ideation', completed: false },
-					{ title: 'Development', completed: false },
-					{ title: 'Testing', completed: false },
+					{
+						title: 'Ideation & Research',
+						completed: false,
+						tasks: [
+							{
+								'Problem Definition':
+									'Clearly articulate the issue your app aims to solve. Who is it for, and why does it matter?',
+							},
+							{
+								'Market Analysis':
+									'Study the competitive landscape. Identify existing solutions and see how your product can stand out.',
+							},
+							{
+								'User Research':
+									'Gather insights from potential users about their needs and pain points. Conduct interviews, surveys, or focus groups to validate your hypothesis.',
+							},
+							{
+								'Feasibility Analysis':
+									'Assess technical feasibility, potential costs, and revenue models to ensure the concept can be developed sustainably.',
+							},
+						],
+					},
+					{
+						title: 'Gathering & Planning',
+						completed: false,
+						tasks: [
+							{
+								'Define Key Features':
+									'List core functionalities the app must have to satisfy initial user needs (i.e., the minimum viable product or MVP feature set).',
+							},
+							{
+								'Create User Stories':
+									'Translate app features into stories that describe the who, what, and why of each feature from a user perspective.',
+							},
+							{
+								'Technical Considerations':
+									'Decide on the technology stack (e.g., native vs. cross-platform for mobile apps), backend infrastructure, data storage, and third-party integrations.',
+							},
+							{
+								'Roadmap & Milestones':
+									'Outline a timeline with key deliverables. Plan your sprints or development cycles if following Agile methodologies.',
+							},
+						],
+					},
+					{
+						title: 'UX/UI & Prototyping',
+						completed: false,
+						tasks: [
+							{
+								'Information Architecture':
+									'Define the hierarchy of information and navigational flow.',
+							},
+							{
+								Wireframing:
+									'Sketch low-fidelity wireframes to visualize layout and user journeys.',
+							},
+							{
+								'Interactive Prototypes':
+									'Build high-fidelity mockups or clickable prototypes to gather stakeholder and user feedback early.',
+							},
+							{
+								'Design System/Style Guide':
+									'Establish consistent visual guidelines (colors, typography, icons) that will be used throughout the product.',
+							},
+						],
+					},
+					{
+						title: 'Development (MVP)',
+						completed: false,
+						tasks: [
+							{
+								'Set Up the Development Environment':
+									'Configure repositories, CI/CD pipeline, and any necessary tools for collaborative work.',
+							},
+							{
+								'Iterative Feature Implementation':
+									'Start coding the MVP features, integrating design elements and functionality in a modular, testable manner.',
+							},
+							{
+								'Regular Checkpoints':
+									'Conduct daily standups (if Agile/Scrum) and frequent demos to keep the team aligned on progress.',
+							},
+							{
+								'Version Control & Documentation':
+									'Use version control (e.g., Git) rigorously and maintain clear documentation for the codebase and APIs.',
+							},
+						],
+					},
+					{
+						title: 'Testing & QA',
+						completed: false,
+						tasks: [
+							{
+								'Unit Testing':
+									'Developers test individual components to ensure each module works as intended.',
+								'Integration Testing':
+									'Check that different parts of the system work correctly together (e.g., front-end with back-end APIs).',
+							},
+							{
+								'User Acceptance Testing (UAT)':
+									'Involve a small group of real or representative users to test the app under real-world conditions.',
+							},
+							{
+								'Performance & Security Testing':
+									'Ensure the app meets necessary performance benchmarks (speed, stability) and is secure from common vulnerabilities.',
+							},
+						],
+					},
+					{
+						title: 'Prep for Beta',
+						completed: false,
+						tasks: [
+							{
+								'Refine the MVP':
+									'Incorporate feedback from testing to fix critical bugs, improve usability, and stabilize core features.',
+							},
+							{
+								'Beta User Selection':
+									'Identify a group of beta testers who represent your target audience. They could be existing users or volunteers recruited via sign-ups.',
+							},
+							{
+								'Beta Release & Distribution':
+									'Deploy a beta version (TestFlight for iOS, internal testing tracks for Android, or invite-based web access).',
+							},
+							{
+								'Feedback Collection Mechanisms':
+									'Implement in-app feedback forms, bug-reporting tools, or surveys to capture user feedback rapidly.',
+							},
+						],
+					},
+					{
+						title: 'Beta Testing & Iteration',
+						completed: false,
+						tasks: [
+							{
+								'Monitor Key Metrics':
+									'Track session length, crashes, user retention, and feature usage to assess where improvements are needed.',
+							},
+							{
+								'Iterative Fixes & Updates':
+									'Quickly address bugs and usability issues uncovered by beta users. Release updates with improvements and new features if feasible within the beta phase.',
+							},
+							{
+								'Communication with Beta Testers':
+									'Engage testers via email updates or community forums. Show appreciation for their feedback and keep them informed about upcoming changes.',
+							},
+						],
+					},
 				],
 				createdAt: new Date(),
 			};
@@ -137,17 +281,14 @@ export default function Home() {
 		const { source, destination } = result;
 		const draggedTask = tasks[source.index];
 
-		// If moved within the same step, reorder tasks
 		if (source.droppableId === destination.droppableId) {
 			const updatedTasks = Array.from(tasks);
 			const [movedTask] = updatedTasks.splice(source.index, 1);
 			updatedTasks.splice(destination.index, 0, movedTask);
 			setTasks(updatedTasks);
 
-			// Update Firestore with the new order
 			await updateTaskOrder(updatedTasks);
 		} else {
-			// If moved to a new step, update the task's step
 			await updateTaskStep(draggedTask.id, parseInt(destination.droppableId));
 		}
 	};
@@ -159,7 +300,6 @@ export default function Home() {
 				order: index,
 			}));
 
-			// Update Firestore with the new order
 			for (const task of batch) {
 				const taskRef = doc(
 					db,
@@ -201,7 +341,7 @@ export default function Home() {
 				step: selectedStep,
 				status: 'To Do',
 				priority: priority || 'Medium',
-				order: tasks.length, // Add this line
+				order: tasks.length,
 			};
 			const docRef = await addDoc(taskRef, newTask);
 
@@ -239,7 +379,7 @@ export default function Home() {
 					<button
 						onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
 						className='mb-4 text-white'>
-						{isSidebarCollapsed ? '☰' : '✕'}
+						{isSidebarCollapsed ? '>' : '<'}
 					</button>
 
 					{/* Sidebar Content */}
@@ -303,10 +443,7 @@ export default function Home() {
 			)}
 
 			{/* Main Workspace */}
-			<div
-				className={`flex-1 p-6 bg-gray-100 transition-all duration-300 ${
-					selectedProject ? (isSidebarCollapsed ? 'ml-0' : 'ml-0') : ''
-				}`}>
+			<div className={`flex-1 p-6 bg-gray-100 transition-all duration-300`}>
 				{selectedProject ? (
 					<>
 						{/* Project Header */}
@@ -335,87 +472,120 @@ export default function Home() {
 							))}
 						</div>
 
-						{/* Filters */}
-						<div className='flex space-x-4 mb-4'>
-							<select
-								value={filterPriority}
-								onChange={(e) => setFilterPriority(e.target.value)}
-								className='border p-2 rounded'>
-								<option value=''>All Priorities</option>
-								<option value='High'>🔴 High</option>
-								<option value='Medium'>🟠 Medium</option>
-								<option value='Low'>🟢 Low</option>
-							</select>
-							<input
-								type='text'
-								placeholder='Search Tasks'
-								value={filterSearch}
-								onChange={(e) => setFilterSearch(e.target.value)}
-								className='border p-2 rounded'
-							/>
-						</div>
-
 						{/* Drag-and-Drop Task List */}
 						<DragDropContext onDragEnd={handleDragEnd}>
 							<Droppable droppableId={String(selectedStep)}>
-								{(provided) => (
-									<ul
-										ref={provided.innerRef}
-										{...provided.droppableProps}
-										className='space-y-2 mt-2'>
-										{filteredTasks.map((task, index) => (
-											<Draggable
-												key={task.id}
-												draggableId={task.id}
-												index={index}>
-												{(provided) => (
-													<li
-														ref={provided.innerRef}
-														{...provided.draggableProps}
-														{...provided.dragHandleProps}
-														className='bg-white p-4 rounded shadow flex justify-between items-center'>
-														<span>{task.title}</span>
-														<span
-															className={`text-sm font-semibold ${
-																task.priority === 'High'
-																	? 'text-red-500'
-																	: task.priority === 'Medium'
-																	? 'text-orange-500'
-																	: 'text-green-500'
-															}`}>
-															{task.priority}
-														</span>
-														<select
-															value={task.status}
-															onChange={(e) =>
-																handleEditTask(
-																	task.id,
-																	'status',
-																	e.target.value
-																)
+								{(provided) => {
+									const currentStepData = selectedProject.steps[selectedStep];
+									return (
+										<>
+											<div className='flex flex-col bg-gray-200 p-4 mb-4 rounded text-xs gap-2'>
+												<h3>
+													<strong>Typical Tasks for this step</strong>
+												</h3>
+												<ul className='list-inside'>
+													{currentStepData.tasks?.map(
+														(guideTask, guideIndex) => {
+															// If guideTask is just a string:
+															if (typeof guideTask === 'string') {
+																return <li key={guideIndex}>{guideTask}</li>;
 															}
-															className={`text-white py-1 px-2 rounded ${
-																task.status === 'To Do'
-																	? 'bg-blue-500'
-																	: task.status === 'In Progress'
-																	? 'bg-green-500'
-																	: 'bg-gray-500'
-															}`}>
-															<option value='To Do'>To Do</option>
-															<option value='In Progress'>In Progress</option>
-															<option value='Done'>Done</option>
-														</select>
-													</li>
-												)}
-											</Draggable>
-										))}
-										{provided.placeholder}
-									</ul>
-								)}
+															// If guideTask is an object, e.g. { "Define Key Features": "..." }
+															else if (typeof guideTask === 'object') {
+																// Extract key/value
+																return Object.entries(guideTask).map(
+																	([title, description]) => (
+																		<li key={title}>
+																			<strong>{title}:</strong> {description}
+																		</li>
+																	)
+																);
+															}
+															return null;
+														}
+													)}
+												</ul>
+											</div>
+											{/* Filters */}
+											<div className='flex space-x-4 mb-4'>
+												<select
+													value={filterPriority}
+													onChange={(e) => setFilterPriority(e.target.value)}
+													className='border p-2 rounded'>
+													<option value=''>All Priorities</option>
+													<option value='High'>🔴 High</option>
+													<option value='Medium'>🟠 Medium</option>
+													<option value='Low'>🟢 Low</option>
+												</select>
+												<input
+													type='text'
+													placeholder='Search Tasks'
+													value={filterSearch}
+													onChange={(e) => setFilterSearch(e.target.value)}
+													className='border p-2 rounded'
+												/>
+											</div>
+											<ul
+												ref={provided.innerRef}
+												{...provided.droppableProps}
+												className='space-y-2 mt-2'>
+												{filteredTasks.map((task, index) => (
+													<Draggable
+														key={task.id}
+														draggableId={task.id}
+														index={index}>
+														{(provided) => (
+															<li
+																ref={provided.innerRef}
+																{...provided.draggableProps}
+																{...provided.dragHandleProps}
+																className='bg-white p-4 rounded shadow flex justify-between items-center'>
+																<span>{task.title}:</span>
+																<span
+																	className={`text-sm font-semibold ${
+																		task.priority === 'High'
+																			? 'text-red-500'
+																			: task.priority === 'Medium'
+																			? 'text-orange-500'
+																			: 'text-green-500'
+																	}`}>
+																	{task.priority}
+																</span>
+																<select
+																	value={task.status}
+																	onChange={(e) =>
+																		handleEditTask(
+																			task.id,
+																			'status',
+																			e.target.value
+																		)
+																	}
+																	className={`text-white py-1 px-2 rounded ${
+																		task.status === 'To Do'
+																			? 'bg-blue-500'
+																			: task.status === 'In Progress'
+																			? 'bg-green-500'
+																			: 'bg-gray-500'
+																	}`}>
+																	<option value='To Do'>To Do</option>
+																	<option value='In Progress'>
+																		In Progress
+																	</option>
+																	<option value='Done'>Done</option>
+																</select>
+															</li>
+														)}
+													</Draggable>
+												))}
+												{provided.placeholder}
+											</ul>
+										</>
+									);
+								}}
 							</Droppable>
 						</DragDropContext>
 
-						{/* Quick Add Task Form */}
+						{/* Add Task Form */}
 						<div className='mt-4'>
 							<input
 								type='text'
