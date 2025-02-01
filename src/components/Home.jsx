@@ -24,6 +24,8 @@ export default function Home() {
 	const [filterSearch, setFilterSearch] = useState('');
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 	const [isTaskHintCollapsed, setIsTaskHintCollapsed] = useState(false);
+	const [isMobile, setIsMobile] = useState(false);
+	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
 	useEffect(() => {
 		const fetchProjects = async () => {
@@ -49,7 +51,12 @@ export default function Home() {
 
 			setProjects(fetchedProjects);
 		};
-
+		const width = window.innerWidth;
+		console.log('window.innerWidth is: ', width);
+		if (width < 1000) {
+			setIsSidebarCollapsed(true);
+			setIsMobile(true);
+		}
 		fetchProjects();
 	}, []);
 
@@ -57,7 +64,9 @@ export default function Home() {
 		setSelectedProject(project);
 		setSelectedStep(0);
 		setTasks(project.tasks || []);
-		setIsSidebarCollapsed(false);
+		if (window.innerWidth >= 1000) {
+			setIsSidebarCollapsed(false);
+		}
 		setIsTaskHintCollapsed(false);
 	};
 
@@ -73,22 +82,54 @@ export default function Home() {
 					{
 						title: 'Ideation & Research',
 						completed: false,
+
 						tasks: [
 							{
-								'Problem Definition':
+								title: 'Problem Definition',
+								description:
 									'Clearly articulate the issue your app aims to solve. Who is it for, and why does it matter?',
+								issues: [],
+								challenges: [
+									'Need to confirm target audience scope',
+									'Validate real user pain points through data',
+								],
+								images: [],
+								links: ['https://example.com/market-research-report.pdf'],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Market Analysis':
+								title: 'Market Analysis',
+								description:
 									'Study the competitive landscape. Identify existing solutions and see how your product can stand out.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: ['https://example.com/competitor-analysis'],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'User Research':
+								title: 'User Research',
+								description:
 									'Gather insights from potential users about their needs and pain points. Conduct interviews, surveys, or focus groups to validate your hypothesis.',
+								issues: ['Need participant consent forms'],
+								challenges: ['Scheduling interviews across time zones'],
+								images: [],
+								links: [],
+								awaiting: 'Recruiting participants from user group',
+								assignee: 'Jane Smith',
 							},
 							{
-								'Feasibility Analysis':
+								title: 'Feasibility Analysis',
+								description:
 									'Assess technical feasibility, potential costs, and revenue models to ensure the concept can be developed sustainably.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -97,20 +138,48 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Define Key Features':
+								title: 'Define Key Features',
+								description:
 									'List core functionalities the app must have to satisfy initial user needs (i.e., the minimum viable product or MVP feature set).',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Create User Stories':
+								title: 'Create User Stories',
+								description:
 									'Translate app features into stories that describe the who, what, and why of each feature from a user perspective.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Technical Considerations':
+								title: 'Technical Considerations',
+								description:
 									'Decide on the technology stack (e.g., native vs. cross-platform for mobile apps), backend infrastructure, data storage, and third-party integrations.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Roadmap & Milestones':
+								title: 'Roadmap & Milestones',
+								description:
 									'Outline a timeline with key deliverables. Plan your sprints or development cycles if following Agile methodologies.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -119,20 +188,48 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Information Architecture':
+								title: 'Information Architecture',
+								description:
 									'Define the hierarchy of information and navigational flow.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								Wireframing:
+								title: 'Wireframing',
+								description:
 									'Sketch low-fidelity wireframes to visualize layout and user journeys.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Interactive Prototypes':
+								title: 'Interactive Prototypes',
+								description:
 									'Build high-fidelity mockups or clickable prototypes to gather stakeholder and user feedback early.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Design System/Style Guide':
+								title: 'Design System/Style Guide',
+								description:
 									'Establish consistent visual guidelines (colors, typography, icons) that will be used throughout the product.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -141,20 +238,48 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Set Up the Development Environment':
+								title: 'Set Up the Development Environment',
+								description:
 									'Configure repositories, CI/CD pipeline, and any necessary tools for collaborative work.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Iterative Feature Implementation':
+								title: 'Iterative Feature Implementation',
+								description:
 									'Start coding the MVP features, integrating design elements and functionality in a modular, testable manner.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Regular Checkpoints':
+								title: 'Regular Checkpoints',
+								description:
 									'Conduct daily standups (if Agile/Scrum) and frequent demos to keep the team aligned on progress.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Version Control & Documentation':
+								title: 'Version Control & Documentation',
+								description:
 									'Use version control (e.g., Git) rigorously and maintain clear documentation for the codebase and APIs.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -163,18 +288,48 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Unit Testing':
+								title: 'Unit Testing',
+								description:
 									'Developers test individual components to ensure each module works as intended.',
-								'Integration Testing':
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
+							},
+							{
+								title: 'Integration Testing',
+								description:
 									'Check that different parts of the system work correctly together (e.g., front-end with back-end APIs).',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'User Acceptance Testing (UAT)':
+								title: 'User Acceptance Testing (UAT)',
+								description:
 									'Involve a small group of real or representative users to test the app under real-world conditions.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Performance & Security Testing':
+								title: 'Performance & Security Testing',
+								description:
 									'Ensure the app meets necessary performance benchmarks (speed, stability) and is secure from common vulnerabilities.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -183,20 +338,48 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Refine the MVP':
+								title: 'Refine the MVP',
+								description:
 									'Incorporate feedback from testing to fix critical bugs, improve usability, and stabilize core features.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Beta User Selection':
+								title: 'Beta User Selection',
+								description:
 									'Identify a group of beta testers who represent your target audience. They could be existing users or volunteers recruited via sign-ups.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Beta Release & Distribution':
+								title: 'Beta Release & Distribution',
+								description:
 									'Deploy a beta version (TestFlight for iOS, internal testing tracks for Android, or invite-based web access).',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Feedback Collection Mechanisms':
+								title: 'Feedback Collection Mechanisms',
+								description:
 									'Implement in-app feedback forms, bug-reporting tools, or surveys to capture user feedback rapidly.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -205,16 +388,37 @@ export default function Home() {
 						completed: false,
 						tasks: [
 							{
-								'Monitor Key Metrics':
+								title: 'Monitor Key Metrics',
+								description:
 									'Track session length, crashes, user retention, and feature usage to assess where improvements are needed.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Iterative Fixes & Updates':
+								title: 'Iterative Fixes & Updates',
+								description:
 									'Quickly address bugs and usability issues uncovered by beta users. Release updates with improvements and new features if feasible within the beta phase.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 							{
-								'Communication with Beta Testers':
+								title: 'Communication with Beta Testers',
+								description:
 									'Engage testers via email updates or community forums. Show appreciation for their feedback and keep them informed about upcoming changes.',
+								issues: [],
+								challenges: [],
+								images: [],
+								links: [],
+								awaiting: '',
+								assignee: '',
 							},
 						],
 					},
@@ -384,117 +588,207 @@ export default function Home() {
 	};
 
 	return (
-		<div className='flex h-screen'>
+		<div className='flex h-full min-h-screen'>
 			{/* Sidebar */}
 			{selectedProject && (
-				<div
-					className={`bg-gray-800 text-white p-4 transition-all duration-300 ${
-						isSidebarCollapsed ? 'w-16' : 'w-64'
-					}`}>
-					{/* Toggle Button */}
-					<button
-						onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-						className='mb-4 text-white'>
-						{isSidebarCollapsed ? (
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								fill='none'
-								viewBox='0 0 24 24'
-								strokeWidth={1.5}
-								stroke='currentColor'
-								className='size-6'>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									d='m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5'
-								/>
-							</svg>
-						) : (
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								fill='none'
-								viewBox='0 0 24 24'
-								strokeWidth={1.5}
-								stroke='currentColor'
-								className='size-6'>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									d='m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5'
-								/>
-							</svg>
-						)}
-					</button>
-
-					{/* Sidebar Content */}
-					{!isSidebarCollapsed && (
+				<>
+					{isMobile ? (
 						<>
-							<h2 className='text-xl font-semibold mb-4'>Projects</h2>
-							<ul>
-								{projects.map((project) => (
-									<li
-										key={project.id}
-										className={`cursor-pointer p-2 rounded flex justify-between ${
-											selectedProject?.id === project.id
-												? 'bg-gray-600'
-												: 'hover:bg-gray-700'
-										}`}
-										onClick={() => handleSelectProject(project)}>
-										{project.name}
-										<span>
+							{/* Button to open sidebar overlay on mobile */}
+							<button
+								onClick={() => setIsMobileSidebarOpen(true)}
+								className='py-2 fixed top-22 left-0 z-50 bg-gray-800 text-white'>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									fill='none'
+									viewBox='0 0 24 24'
+									strokeWidth={1.5}
+									stroke='currentColor'
+									className='size-6'>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										d='m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5'
+									/>
+								</svg>
+							</button>
+
+							{/* Mobile sidebar overlay */}
+							{isMobileSidebarOpen && (
+								<div className='fixed inset-0 z-50 flex  transition-all duration-300'>
+									{/* Sidebar panel */}
+									<div className='w-64 bg-gray-800 text-white p-4  transition-all duration-300'>
+										{/* Close button */}
+										<button
+											onClick={() => setIsMobileSidebarOpen(false)}
+											className='mb-4 text-white'>
+											<svg
+												xmlns='http://www.w3.org/2000/svg'
+												fill='none'
+												viewBox='0 0 24 24'
+												strokeWidth={1.5}
+												stroke='currentColor'
+												className='size-6'>
+												<path
+													strokeLinecap='round'
+													strokeLinejoin='round'
+													d='m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5'
+												/>
+											</svg>
+										</button>
+										<button
+											onClick={() => setSelectedProject(null)}
+											className='bg-orange-500 text-white my-2 py-1 rounded w-full'>
+											Back to Projects
+										</button>
+										{/* Add Project Form */}
+										<div className='my-4'>
+											<input
+												type='text'
+												placeholder='New Project Name'
+												value={newProjectName}
+												onChange={(e) => setNewProjectName(e.target.value)}
+												className='border p-1 rounded w-full mb-2 text-gray-500'
+											/>
+											<input
+												type='text'
+												placeholder='Description'
+												value={newProjectDescription}
+												onChange={(e) =>
+													setNewProjectDescription(e.target.value)
+												}
+												className='border p-1sky rounded w-full mb-2 text-gray-500'
+											/>
 											<button
-												onClick={(e) => {
-													e.stopPropagation();
-													setEditingProject(project);
-												}}
-												className='bg-teal-500 text-white text-xs mr-2 px-1 py-1 rounded'>
-												Edit
+												onClick={handleAddProject}
+												className='bg-sky-500 text-white px-4 py-2 rounded w-full'>
+												Add Project
 											</button>
-											<button
-												onClick={(e) => {
-													e.stopPropagation();
-													handleDeleteProject(project.id);
-												}}
-												className='bg-red-500 text-white text-xs px-1 py-1 rounded'>
-												Delete
-											</button>
-										</span>
-									</li>
-								))}
-							</ul>
-							<div className='mt-4'>
+										</div>
+										{/* Back to Projects Button */}
+										<h2 className='text-xl font-semibold mb-4'>
+											Active Projects
+										</h2>
+										<ul>
+											{projects.map((project) => (
+												<li
+													key={project.id}
+													className={`cursor-pointer m-1 p-2 rounded ${
+														selectedProject?.id === project.id
+															? 'bg-gray-600'
+															: 'hover:bg-gray-700'
+													}`}
+													onClick={() => {
+														handleSelectProject(project);
+														// Optionally close sidebar on selection:
+														setIsMobileSidebarOpen(false);
+													}}>
+													{project.name}
+												</li>
+											))}
+										</ul>
+									</div>
+									{/* Backdrop: clicking it closes the sidebar */}
+									<div
+										className='flex-1 bg-black opacity-50'
+										onClick={() => setIsMobileSidebarOpen(false)}></div>
+								</div>
+							)}
+						</>
+					) : (
+						<div
+							className={`bg-gray-800 text-white p-4 transition-all duration-300  transition-all duration-300 ${
+								isSidebarCollapsed ? 'w-16' : 'w-64'
+							}`}>
+							<button
+								onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+								className='mb-4 text-white'>
+								{isSidebarCollapsed ? (
+									<svg
+										xmlns='http://www.w3.org/2000/svg'
+										fill='none'
+										viewBox='0 0 24 24'
+										strokeWidth={1.5}
+										stroke='currentColor'
+										className='w-6 h-6'>
+										<path
+											strokeLinecap='round'
+											strokeLinejoin='round'
+											d='M5.25 4.5l7.5 7.5-7.5 7.5m6-15l7.5 7.5-7.5 7.5'
+										/>
+									</svg>
+								) : (
+									<svg
+										xmlns='http://www.w3.org/2000/svg'
+										fill='none'
+										viewBox='0 0 24 24'
+										strokeWidth={1.5}
+										stroke='currentColor'
+										className='w-6 h-6'>
+										<path
+											strokeLinecap='round'
+											strokeLinejoin='round'
+											d='M18.75 4.5l-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5'
+										/>
+									</svg>
+								)}
+							</button>
+							<button
+								onClick={() => setSelectedProject(null)}
+								className={`bg-orange-500 text-white my-2 py-1 rounded w-full ${
+									isSidebarCollapsed ? 'hidden' : ''
+								}`}>
+								Back to Projects
+							</button>
+							{/* Add Project Form */}
+							<div className={`my-4 ${isSidebarCollapsed ? 'hidden' : ''}`}>
 								<input
 									type='text'
 									placeholder='New Project Name'
 									value={newProjectName}
 									onChange={(e) => setNewProjectName(e.target.value)}
-									className='border p-2 rounded w-full mb-2 text-gray-500'
+									className='border p-1 rounded w-full mb-2 text-gray-500'
 								/>
 								<input
 									type='text'
 									placeholder='Description'
 									value={newProjectDescription}
 									onChange={(e) => setNewProjectDescription(e.target.value)}
-									className='border p-2 rounded w-full mb-2 text-gray-500'
+									className='border p-1sky rounded w-full mb-2 text-gray-500'
 								/>
 								<button
 									onClick={handleAddProject}
-									className='bg-green-500 text-white px-4 py-2 rounded w-full'>
+									className='bg-sky-500 text-white px-4 py-2 rounded w-full'>
 									Add Project
 								</button>
 							</div>
-							<button
-								onClick={() => setSelectedProject(null)}
-								className='bg-orange-500 text-white mt-2 px-4 py-2 rounded w-full'>
-								Back to Projects
-							</button>
-						</>
+							<h2
+								className={`text-xl font-semibold mb-4 ${
+									isSidebarCollapsed ? 'hidden' : ''
+								}`}>
+								Projects
+							</h2>
+							<ul className={`${isSidebarCollapsed ? 'hidden' : ''}`}>
+								{projects.map((project) => (
+									<li
+										key={project.id}
+										className={`cursor-pointer m-1 p-2 rounded ${
+											selectedProject?.id === project.id
+												? 'bg-gray-600'
+												: 'hover:bg-gray-700'
+										}`}
+										onClick={() => handleSelectProject(project)}>
+										{project.name}
+									</li>
+								))}
+							</ul>
+						</div>
 					)}
-				</div>
+				</>
 			)}
 
 			{/* Main Workspace */}
-			<div className={`flex-1 p-6 bg-gray-100 transition-all duration-300`}>
+			<div className={`flex-1 p-8 bg-gray-100 transition-all duration-300`}>
 				{selectedProject ? (
 					<>
 						{/* Project Header */}
@@ -519,22 +813,39 @@ export default function Home() {
 								</button>
 							</span>
 						</div>
-
+						<div>{selectedProject.description}</div>
 						{/* Step Tabs & Progress */}
-						<div className='flex space-x-4 border-b mb-4'>
-							{selectedProject.steps.map((step, index) => (
-								<button
-									key={index}
-									className={`px-4 py-2 border-b-2 ${
-										selectedStep === index
-											? 'border-blue-500 text-blue-500 font-bold'
-											: 'border-transparent'
-									}`}
-									onClick={() => setSelectedStep(index)}>
-									{step.title} ({calculateStepProgress(index)}%)
-								</button>
-							))}
-						</div>
+						{isMobile ? (
+							<div className='flex space-x-4 border-b mb-4'>
+								<select
+									className='px-4 py-2 w-full border rounded'
+									value={selectedStep}
+									onChange={(e) => setSelectedStep(Number(e.target.value))}>
+									{selectedProject.steps.map((step, index) => (
+										<option
+											key={index}
+											value={index}>
+											{step.title} ({calculateStepProgress(index)}%)
+										</option>
+									))}
+								</select>
+							</div>
+						) : (
+							<div className='flex space-x-4 border-b mb-4'>
+								{selectedProject.steps.map((step, index) => (
+									<button
+										key={index}
+										className={`px-4 py-2 border-b-2 ${
+											selectedStep === index
+												? 'border-blue-500 text-blue-500 font-bold'
+												: 'border-transparent'
+										}`}
+										onClick={() => setSelectedStep(index)}>
+										{step.title} ({calculateStepProgress(index)}%)
+									</button>
+								))}
+							</div>
+						)}
 
 						{/* Drag-and-Drop Task List */}
 						<DragDropContext onDragEnd={handleDragEnd}>
