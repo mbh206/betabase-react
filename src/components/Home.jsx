@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import {
 	collection,
 	doc,
@@ -26,6 +26,7 @@ export default function Home() {
 	const [isTaskHintCollapsed, setIsTaskHintCollapsed] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+	const [activeTaskModal, setActiveTaskModal] = useState(null);
 
 	useEffect(() => {
 		const fetchProjects = async () => {
@@ -52,7 +53,6 @@ export default function Home() {
 			setProjects(fetchedProjects);
 		};
 		const width = window.innerWidth;
-		console.log('window.innerWidth is: ', width);
 		if (width < 1000) {
 			setIsSidebarCollapsed(true);
 			setIsMobile(true);
@@ -78,6 +78,7 @@ export default function Home() {
 			const newProject = {
 				name: newProjectName,
 				description: newProjectDescription,
+				owner: auth.currentUser.uid,
 				steps: [
 					{
 						title: 'Ideation & Research',
@@ -587,6 +588,31 @@ export default function Home() {
 		}
 	};
 
+	const openTaskModal = (task) => {
+		setActiveTaskModal({ ...task });
+	};
+
+	const handleSaveTask = async (updatedTask) => {
+		try {
+			const taskRef = doc(
+				db,
+				'projects',
+				selectedProject.id,
+				'tasks',
+				updatedTask.id
+			);
+			await updateDoc(taskRef, updatedTask);
+			setTasks((prevTasks) =>
+				prevTasks.map((task) =>
+					task.id === updatedTask.id ? updatedTask : task
+				)
+			);
+			setActiveTaskModal(null);
+		} catch (error) {
+			console.log('Error updating task: ', error);
+		}
+	};
+
 	return (
 		<div className='flex h-full min-h-screen'>
 			{/* Sidebar */}
@@ -792,7 +818,7 @@ export default function Home() {
 				{selectedProject ? (
 					<>
 						{/* Project Header */}
-						<div className='flex justify-between items-center mb-4'>
+						<div className='flex justify-between items-center mb-2'>
 							<h2 className='text-2xl font-bold'>{selectedProject.name}</h2>
 							<span>
 								<button
@@ -813,7 +839,9 @@ export default function Home() {
 								</button>
 							</span>
 						</div>
-						<div>{selectedProject.description}</div>
+						<div className='mb-2 p-1 bg-white rounded'>
+							{selectedProject.description}
+						</div>
 						{/* Step Tabs & Progress */}
 						{isMobile ? (
 							<div className='flex space-x-4 border-b mb-4'>
@@ -831,13 +859,13 @@ export default function Home() {
 								</select>
 							</div>
 						) : (
-							<div className='flex space-x-4 border-b mb-4'>
+							<div className='flex justify-between space-x-2 border-b mb-0 border-t-2 text-xs'>
 								{selectedProject.steps.map((step, index) => (
 									<button
 										key={index}
-										className={`px-4 py-2 border-b-2 ${
+										className={`p-2 border-b-2 ${
 											selectedStep === index
-												? 'border-blue-500 text-blue-500 font-bold'
+												? 'border-blue-500 text-blue-500 font-bold bg-white'
 												: 'border-transparent'
 										}`}
 										onClick={() => setSelectedStep(index)}>
@@ -852,11 +880,12 @@ export default function Home() {
 							<Droppable droppableId={String(selectedStep)}>
 								{(provided) => {
 									const currentStepData = selectedProject.steps[selectedStep];
+
 									return (
 										<>
 											<div
-												className={`flex flex-col bg-gray-200 p-4 mb-4 rounded text-xs gap-2 ${
-													isTaskHintCollapsed ? 'h-12' : ''
+												className={`flex flex-col bg-gray-200 p-2 mb-2 rounded text-xs gap-2 ${
+													isTaskHintCollapsed ? 'h-10' : ''
 												}`}>
 												<h3 className='flex justify-between'>
 													<strong>Typical Tasks for this step</strong>
@@ -864,7 +893,7 @@ export default function Home() {
 														onClick={() =>
 															setIsTaskHintCollapsed(!isTaskHintCollapsed)
 														}
-														className='mb-4 text-gray-500'>
+														className='text-gray-500'>
 														{isTaskHintCollapsed ? (
 															<svg
 																xmlns='http://www.w3.org/2000/svg'
@@ -903,12 +932,11 @@ export default function Home() {
 																if (typeof guideTask === 'string') {
 																	return <li key={guideIndex}>{guideTask}</li>;
 																} else if (typeof guideTask === 'object') {
-																	return Object.entries(guideTask).map(
-																		([title, description]) => (
-																			<li key={title}>
-																				<strong>{title}:</strong> {description}
-																			</li>
-																		)
+																	return (
+																		<li key={guideTask.title}>
+																			<strong>{guideTask.title}:</strong>{' '}
+																			{guideTask.description}
+																		</li>
 																	);
 																}
 																return null;
@@ -920,7 +948,7 @@ export default function Home() {
 												)}
 											</div>
 											{/* Filters */}
-											<div className='flex space-x-4 mb-4'>
+											<div className='flex space-x-2 mb-2'>
 												<select
 													value={filterPriority}
 													onChange={(e) => setFilterPriority(e.target.value)}
@@ -955,7 +983,24 @@ export default function Home() {
 																{...provided.dragHandleProps}
 																className='bg-white p-4 rounded shadow flex justify-between items-center'>
 																{/* Task Title */}
-																<div>
+																<div className='flex items-center'>
+																	<button
+																		className='mr-2'
+																		onClick={() => openTaskModal(task)}>
+																		<svg
+																			xmlns='http://www.w3.org/2000/svg'
+																			fill='none'
+																			viewBox='0 0 24 24'
+																			strokeWidth={1.5}
+																			stroke='currentColor'
+																			className='size-6'>
+																			<path
+																				strokeLinecap='round'
+																				strokeLinejoin='round'
+																				d='M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25'
+																			/>
+																		</svg>
+																	</button>
 																	<span className='mr-3 font-medium'>
 																		{task.title}:
 																	</span>
@@ -1061,7 +1106,7 @@ export default function Home() {
 						</DragDropContext>
 
 						{/* Add Task Form */}
-						<div className='mt-4'>
+						<div className='mt-2'>
 							<input
 								type='text'
 								placeholder='New Task Name'
@@ -1075,24 +1120,24 @@ export default function Home() {
 								placeholder='New Task Description'
 								value={newTaskDescription}
 								onChange={(e) => setNewTaskDescription(e.target.value)}
-								className='border p-2 rounded w-full'
+								className='border p-2 mt-1 rounded w-full'
 								onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
 							/>
 							<div className='flex space-x-2 mt-2'>
 								<button
 									onClick={() => handleAddTask('High')}
-									className='bg-red-500 text-white px-4 py-2 rounded'>
-									Add High Priority
+									className='bg-red-500 text-white px-2 py-1 rounded'>
+									Add as High Priority
 								</button>
 								<button
 									onClick={() => handleAddTask('Medium')}
-									className='bg-orange-500 text-white px-4 py-2 rounded'>
-									Add Medium Priority
+									className='bg-orange-500 text-white px-2 py-1 rounded'>
+									Add as Medium Priority
 								</button>
 								<button
 									onClick={() => handleAddTask('Low')}
-									className='bg-green-500 text-white px-4 py-2 rounded'>
-									Add Low Priority
+									className='bg-green-500 text-white px-2 py-1 rounded'>
+									Add as Low Priority
 								</button>
 							</div>
 						</div>
@@ -1157,6 +1202,176 @@ export default function Home() {
 							className='bg-gray-500 text-white px-4 py-2 rounded ml-2'>
 							Cancel
 						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Task Details Modal */}
+			{activeTaskModal && (
+				<div
+					className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
+					onClick={() => setActiveTaskModal(null)}>
+					<div
+						className='bg-white p-6 rounded shadow-lg w-full max-w-2xl'
+						onClick={(e) => e.stopPropagation()}>
+						<div className='flex justify-between items-center mb-4'>
+							<h2 className='text-xl font-bold'>Edit Task Details</h2>
+							<button
+								onClick={() => setActiveTaskModal(null)}
+								className='text-gray-500'>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									fill='none'
+									viewBox='0 0 24 24'
+									strokeWidth={1.5}
+									stroke='currentColor'
+									className='w-6 h-6'>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										d='M6 18L18 6M6 6l12 12'
+									/>
+								</svg>
+							</button>
+						</div>
+						<form>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Title</label>
+								<input
+									type='text'
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.title}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											title: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Description</label>
+								<textarea
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.description}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											description: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Priority</label>
+								<select
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.priority}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											priority: e.target.value,
+										})
+									}>
+									<option value='High'>High</option>
+									<option value='Medium'>Medium</option>
+									<option value='Low'>Low</option>
+								</select>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Status</label>
+								<select
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.status}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											status: e.target.value,
+										})
+									}>
+									<option value='To Do'>To Do</option>
+									<option value='In Progress'>In Progress</option>
+									<option value='Done'>Done</option>
+								</select>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>
+									Issues (comma separated)
+								</label>
+								<input
+									type='text'
+									className='border p-1 rounded w-full'
+									value={(activeTaskModal.issues || []).join(', ')}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											issues: e.target.value.split(',').map((s) => s.trim()),
+										})
+									}
+								/>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>
+									Challenges (comma separated)
+								</label>
+								<input
+									type='text'
+									className='border p-1 rounded w-full'
+									value={(activeTaskModal.challenges || []).join(', ')}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											challenges: e.target.value
+												.split(',')
+												.map((s) => s.trim()),
+										})
+									}
+								/>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Awaiting</label>
+								<input
+									type='text'
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.awaiting}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											awaiting: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className='mb-2'>
+								<label className='block text-sm font-medium'>Assignee</label>
+								<input
+									type='text'
+									className='border p-1 rounded w-full'
+									value={activeTaskModal.assignee}
+									onChange={(e) =>
+										setActiveTaskModal({
+											...activeTaskModal,
+											assignee: e.target.value,
+										})
+									}
+								/>
+							</div>
+							{/* Additional fields (like images or links) can be added similarly */}
+							<div className='flex justify-end mt-4 space-x-2'>
+								<button
+									type='button'
+									className='bg-gray-500 text-white px-4 py-2 rounded'
+									onClick={() => setActiveTaskModal(null)}>
+									Cancel
+								</button>
+								<button
+									type='button'
+									className='bg-blue-500 text-white px-4 py-2 rounded'
+									onClick={() => handleSaveTask(activeTaskModal)}>
+									Save Changes
+								</button>
+							</div>
+						</form>
 					</div>
 				</div>
 			)}
