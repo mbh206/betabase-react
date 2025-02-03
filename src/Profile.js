@@ -9,6 +9,7 @@ import {
 	where,
 	getDocs,
 } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 export default function Profile() {
 	const { currentUser } = useAuth();
@@ -76,7 +77,7 @@ export default function Profile() {
 								<li
 									key={proj.id}
 									className='border p-2 my-1 rounded'>
-									{proj.name}
+									<Link to={`/project/${proj.id}`}>{proj.name}</Link>
 								</li>
 							))}
 						</ul>

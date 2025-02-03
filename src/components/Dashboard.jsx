@@ -3,6 +3,8 @@ import { auth, db } from '../firebase';
 import {
 	collection,
 	doc,
+	query,
+	where,
 	getDocs,
 	updateDoc,
 	deleteDoc,
@@ -10,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-export default function Home() {
+export default function Dashboard() {
 	const [projects, setProjects] = useState([]);
 	const [newProjectName, setNewProjectName] = useState('');
 	const [newProjectDescription, setNewProjectDescription] = useState('');
@@ -27,16 +29,23 @@ export default function Home() {
 	const [isMobile, setIsMobile] = useState(false);
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 	const [activeTaskModal, setActiveTaskModal] = useState(null);
+	const [showAddProjectForm, setShowAddProjectForm] = useState(false);
 
+	// Inside your useEffect in Dashboard:
 	useEffect(() => {
 		const fetchProjects = async () => {
-			const projSnapshot = await getDocs(collection(db, 'projects'));
+			// Filter projects by owner: current user's UID.
+			const q = query(
+				collection(db, 'projects'),
+				where('owner', '==', auth.currentUser.uid)
+			);
+			const projSnapshot = await getDocs(q);
 			const fetchedProjects = projSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data(),
 			}));
 
-			const allTasks = [];
+			// For each project, fetch its tasks (if needed)
 			for (let project of fetchedProjects) {
 				const tasksSnap = await getDocs(
 					collection(db, 'projects', project.id, 'tasks')
@@ -47,11 +56,11 @@ export default function Home() {
 					projectId: project.id,
 				}));
 				project.tasks = projectTasks;
-				allTasks.push(...projectTasks);
 			}
 
 			setProjects(fetchedProjects);
 		};
+
 		const width = window.innerWidth;
 		if (width < 1000) {
 			setIsSidebarCollapsed(true);
@@ -427,10 +436,13 @@ export default function Home() {
 				createdAt: new Date(),
 			};
 			const docRef = await addDoc(projectRef, newProject);
+			const createdProject = { id: docRef.id, ...newProject };
 
-			setProjects([...projects, { id: docRef.id, ...newProject }]);
+			setProjects([...projects, createdProject]);
 			setNewProjectName('');
 			setNewProjectDescription('');
+			setShowAddProjectForm(false);
+			setSelectedProject(createdProject);
 		} catch (error) {
 			console.error('Error adding project:', error);
 		}
@@ -1144,19 +1156,70 @@ export default function Home() {
 					</>
 				) : (
 					<>
-						{/* Initial Load: Show All Projects as Cards */}
-						<h2 className='text-2xl font-bold mb-4'>All Projects</h2>
-						<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
-							{projects.map((project) => (
-								<div
-									key={project.id}
-									onClick={() => handleSelectProject(project)}
-									className='bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition-shadow'>
-									<h3 className='text-xl font-semibold'>{project.name}</h3>
-									<p className='text-gray-600'>{project.description}</p>
+						{projects.length === 0 ? (
+							<>
+								{showAddProjectForm ? (
+									<div className='max-w-md mx-auto p-4 bg-white shadow rounded'>
+										<h2 className='text-2xl font-bold mb-4'>
+											Create New Project
+										</h2>
+										<input
+											type='text'
+											placeholder='Project Name'
+											value={newProjectName}
+											onChange={(e) => setNewProjectName(e.target.value)}
+											className='border p-2 rounded w-full mb-2'
+										/>
+										<input
+											type='text'
+											placeholder='Project Description'
+											value={newProjectDescription}
+											onChange={(e) => setNewProjectDescription(e.target.value)}
+											className='border p-2 rounded w-full mb-2'
+										/>
+										<div className='flex justify-between'>
+											<button
+												onClick={handleAddProject}
+												className='bg-blue-500 text-white px-4 py-2 rounded'>
+												Add Project
+											</button>
+											<button
+												onClick={() => setShowAddProjectForm(false)}
+												className='bg-gray-500 text-white px-4 py-2 rounded'>
+												Cancel
+											</button>
+										</div>
+									</div>
+								) : (
+									<div className='flex flex-col items-center justify-center h-full'>
+										<h2 className='text-2xl font-bold mb-4'>
+											You don't have any projects yet!
+										</h2>
+										<button
+											onClick={() => setShowAddProjectForm(true)}
+											className='px-4 py-2 bg-blue-500 text-white rounded'>
+											Start a Project
+										</button>
+									</div>
+								)}
+							</>
+						) : (
+							<>
+								{/* Existing code to display projects as cards */}
+								<h2 className='text-2xl font-bold mb-4'>All Projects</h2>
+								<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+									{projects.map((project) => (
+										<div
+											key={project.id}
+											onClick={() => handleSelectProject(project)}
+											className='bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition-shadow'>
+											<h3 className='text-xl font-semibold'>{project.name}</h3>
+											<p className='text-gray-600'>{project.description}</p>
+										</div>
+									))}
 								</div>
-							))}
-						</div>
+							</>
+						)}
 					</>
 				)}
 			</div>
