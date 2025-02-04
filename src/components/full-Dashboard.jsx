@@ -792,7 +792,7 @@ export default function Dashboard() {
 									placeholder='Description'
 									value={newProjectDescription}
 									onChange={(e) => setNewProjectDescription(e.target.value)}
-									className='border p-1sky rounded w-full mb-2 text-gray-500'
+									className='border p-1 rounded w-full mb-2 text-gray-500'
 								/>
 								<button
 									onClick={handleAddProject}
