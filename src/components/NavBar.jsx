@@ -29,7 +29,7 @@ export default function NavBar() {
 					/>
 				</Link>
 			</div>
-			<ul className='flex gap-5 my-5 uppercase font-bold text-2xl'>
+			<ul className='hidden md:flex flex gap-5 my-4 uppercase font-bold text-2xl'>
 				<li>
 					<Link to='/'>
 						<svg

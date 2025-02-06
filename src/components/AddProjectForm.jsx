@@ -9,8 +9,11 @@ export default function AddProjectForm({
 	isSidebarCollapsed,
 }) {
 	return (
-		<div className={`my-4  ${isSidebarCollapsed ? 'hidden' : ''}`}>
-			<h2 className='text-2xl font-bold mb-4'>Create New Project</h2>
+		<div
+			className={`bg-gray-700 p-2 rounded-xl ${
+				isSidebarCollapsed ? 'hidden' : ''
+			}`}>
+			<h2 className='text-xl font-bold mb-1'>Create New Project</h2>
 			<input
 				type='text'
 				placeholder='Project Name'
@@ -27,7 +30,7 @@ export default function AddProjectForm({
 			/>
 			<button
 				onClick={handleAddProject}
-				className='bg-sky-500 text-white px-4 py-2 rounded w-full'>
+				className='bg-sky-500 text-white px-4 py-2 rounded w-full mb-2'>
 				Add Project
 			</button>
 		</div>

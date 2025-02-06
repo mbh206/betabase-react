@@ -10,7 +10,6 @@ import {
 	deleteDoc,
 	addDoc,
 } from 'firebase/firestore';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from './Sidebar';
 import ProjectDetail from './ProjectDetail';
 import TaskModal from './TaskModal';
@@ -25,8 +24,8 @@ export default function Dashboard() {
 	const [tasks, setTasks] = useState([]);
 	const [newTaskTitle, setNewTaskTitle] = useState('');
 	const [newTaskDescription, setNewTaskDescription] = useState('');
-	const [filterPriority, setFilterPriority] = useState('');
-	const [filterSearch, setFilterSearch] = useState('');
+	const [filterPriority] = useState('');
+	const [filterSearch] = useState('');
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 	const [isTaskHintCollapsed, setIsTaskHintCollapsed] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
@@ -63,7 +62,6 @@ export default function Dashboard() {
 
 		const width = window.innerWidth;
 		if (width < 1000) {
-			setIsSidebarCollapsed(true);
 			setIsMobile(true);
 		}
 		fetchProjects();
@@ -77,11 +75,6 @@ export default function Dashboard() {
 			setIsSidebarCollapsed(false);
 		}
 		setIsTaskHintCollapsed(false);
-	};
-
-	const clearSelectedProject = () => {
-		setSelectedProject(null);
-		setTasks([]);
 	};
 
 	const handleAddProject = async () => {
@@ -656,6 +649,8 @@ export default function Dashboard() {
 				setNewProjectDescription={setNewProjectDescription}
 				handleAddProject={handleAddProject}
 				handleSelectProject={handleSelectProject}
+				setShowAddForm={setShowAddProjectForm}
+				showAddProjectForm={showAddProjectForm}
 			/>
 			{/* Main Workspace */}
 			<div className={`flex-1 p-8 bg-gray-100 transition-all duration-300`}>
@@ -685,7 +680,14 @@ export default function Dashboard() {
 				) : (
 					<div className='flex flex-col items-center justify-center h-full'>
 						<h2 className='text-2xl font-bold mb-4'>No project selected!</h2>
-						<p>Please select a project from the sidebar or create a new one.</p>
+						<p>
+							Please select one below or add a new project from the sidebar.
+						</p>
+						<ul>
+							{projects.map((project) => {
+								<li>project.name</li>;
+							})}
+						</ul>
 					</div>
 				)}
 			</div>

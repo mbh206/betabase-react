@@ -5,7 +5,7 @@ import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import Login from './Login';
 import Signup from './Signup';
-import Profile from './Profile';
+import Profile from './components/Profile';
 import PrivateRoute from './components/PrivateRoute';
 import NavBar from './components/NavBar';
 

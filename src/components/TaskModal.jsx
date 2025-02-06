@@ -1,26 +1,22 @@
-// src/components/Dashboard/TaskModal.jsx
 import React, { useState, useEffect } from 'react';
 
 export default function TaskModal({ task, onClose, onSave }) {
-	// Create a local copy of the task to allow editing without immediate save
 	const [localTask, setLocalTask] = useState(task);
 
-	// When the task prop changes, update the local state
 	useEffect(() => {
 		setLocalTask(task);
 	}, [task]);
 
-	// Handler for local changes
 	const handleLocalChange = (field, value) => {
 		setLocalTask((prev) => ({ ...prev, [field]: value }));
 	};
 
 	return (
 		<div
-			className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
+			className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50'
 			onClick={onClose}>
 			<div
-				className='bg-white p-6 rounded shadow-lg w-full max-w-2xl'
+				className='text-gray-800 bg-gray-300 p-6 rounded shadow-lg w-full max-w-2xl'
 				onClick={(e) => e.stopPropagation()}>
 				<div className='flex justify-between items-center mb-4'>
 					<h2 className='text-xl font-bold'>Edit Task Details</h2>
@@ -44,26 +40,26 @@ export default function TaskModal({ task, onClose, onSave }) {
 				</div>
 				<form>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Title</label>
+						<label className='block text-sm font-light'>Title</label>
 						<input
 							type='text'
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.title}
 							onChange={(e) => handleLocalChange('title', e.target.value)}
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Description</label>
+						<label className='block text-sm font-light'>Description</label>
 						<textarea
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.description}
 							onChange={(e) => handleLocalChange('description', e.target.value)}
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Priority</label>
+						<label className='block text-sm font-light'>Priority</label>
 						<select
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.priority}
 							onChange={(e) => handleLocalChange('priority', e.target.value)}>
 							<option value='High'>High</option>
@@ -72,9 +68,11 @@ export default function TaskModal({ task, onClose, onSave }) {
 						</select>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Status</label>
+						<label className='block text-sm font-medium font-light'>
+							Status
+						</label>
 						<select
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.status}
 							onChange={(e) => handleLocalChange('status', e.target.value)}>
 							<option value='To Do'>To Do</option>
@@ -83,12 +81,12 @@ export default function TaskModal({ task, onClose, onSave }) {
 						</select>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>
+						<label className='block text-sm font-light'>
 							Issues (comma separated)
 						</label>
 						<input
 							type='text'
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={(localTask.issues || []).join(', ')}
 							onChange={(e) =>
 								handleLocalChange(
@@ -99,12 +97,12 @@ export default function TaskModal({ task, onClose, onSave }) {
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>
+						<label className='block text-sm font-light'>
 							Challenges (comma separated)
 						</label>
 						<input
 							type='text'
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={(localTask.challenges || []).join(', ')}
 							onChange={(e) =>
 								handleLocalChange(
@@ -115,19 +113,19 @@ export default function TaskModal({ task, onClose, onSave }) {
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Awaiting</label>
+						<label className='block text-sm font-light'>Awaiting</label>
 						<input
 							type='text'
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.awaiting || ''}
 							onChange={(e) => handleLocalChange('awaiting', e.target.value)}
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-medium'>Assignee</label>
+						<label className='block text-sm font-light'>Assignee</label>
 						<input
 							type='text'
-							className='border p-1 rounded w-full'
+							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.assignee || ''}
 							onChange={(e) => handleLocalChange('assignee', e.target.value)}
 						/>
