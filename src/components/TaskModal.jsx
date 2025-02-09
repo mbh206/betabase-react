@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
-export default function TaskModal({ task, onClose, onSave }) {
+export default function TaskModal({
+	task,
+	onClose,
+	onSave,
+	projectCollaborators = [],
+}) {
 	const [localTask, setLocalTask] = useState(task);
+	const [richTextValue, setRichTextValue] = useState(
+		localTask.description || ''
+	);
 
 	useEffect(() => {
 		setLocalTask(task);
@@ -49,11 +59,26 @@ export default function TaskModal({ task, onClose, onSave }) {
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-light'>Description</label>
-						<textarea
+						<label className='block text-sm font-light'>
+							Description (Rich Text)
+						</label>
+						<ReactQuill
+							className='bg-white rounded-xl '
+							value={richTextValue}
+							onChange={(content) => {
+								setRichTextValue(content);
+								handleLocalChange('description', content);
+							}}
+							theme='snow'
+						/>
+					</div>
+					<div className='mb-2'>
+						<label className='block text-sm font-light'>Due Date</label>
+						<input
+							type='date'
 							className='border px-2 py-1 rounded-xl w-full'
-							value={localTask.description}
-							onChange={(e) => handleLocalChange('description', e.target.value)}
+							value={localTask.dueDate}
+							onChange={(e) => handleLocalChange('dueDate', e.target.value)}
 						/>
 					</div>
 					<div className='mb-2'>
@@ -122,14 +147,22 @@ export default function TaskModal({ task, onClose, onSave }) {
 						/>
 					</div>
 					<div className='mb-2'>
-						<label className='block text-sm font-light'>Assignee</label>
-						<input
-							type='text'
+						<label className='block text-sm font-light'>Assign To</label>
+						<select
 							className='border px-2 py-1 rounded-xl w-full'
 							value={localTask.assignee || ''}
-							onChange={(e) => handleLocalChange('assignee', e.target.value)}
-						/>
+							onChange={(e) => handleLocalChange('assignee', e.target.value)}>
+							<option value=''>Unassigned</option>
+							{projectCollaborators.map((collab) => (
+								<option
+									key={collab}
+									value={collab}>
+									{collab}
+								</option>
+							))}
+						</select>
 					</div>
+
 					<div className='flex justify-end mt-4 space-x-2'>
 						<button
 							type='button'

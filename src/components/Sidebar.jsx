@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AddProjectForm from './AddProjectForm';
 import ProjectList from './ProjectList';
 import MobileDrawer from './MobileDrawer';
+import AddProjectModal from './AddProjectModal';
 
 export default function Sidebar({
 	projects,
@@ -21,6 +23,14 @@ export default function Sidebar({
 	setShowAddForm,
 	showAddProjectForm,
 }) {
+	const navigate = useNavigate();
+	const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+
+	const handleProjectClick = (proj) => {
+		handleSelectProject(proj);
+		navigate(`/dashboard/${proj.id}`);
+	};
+
 	if (isMobile) {
 		return (
 			<>
@@ -65,24 +75,26 @@ export default function Sidebar({
 						</button>
 					</div>
 					{/* Add Project Form */}
-					<AddProjectForm
+					<button
+						className='bg-orange-500 text-white px-4 py-1 rounded-lg shadow uppercase'
+						onClick={() => setIsAddProjectModalOpen(true)}>
+						Add New Project
+					</button>
+					<AddProjectModal
+						isOpen={isAddProjectModalOpen}
+						onClose={() => setIsAddProjectModalOpen(false)}
 						newProjectName={newProjectName}
 						newProjectDescription={newProjectDescription}
 						setNewProjectName={setNewProjectName}
 						setNewProjectDescription={setNewProjectDescription}
 						handleAddProject={handleAddProject}
-						isSidebarCollapsed={false} // not collapsed inside the drawer
 					/>
-					<div className='p-1 bg-gray-700 rounded-xl'>
+					<div className='p-1 bg-gray-500 rounded-xl'>
 						<h2 className='text-xl font-semibold m-2'>Active Projects</h2>
 						<ProjectList
 							projects={projects}
 							selectedProject={selectedProject}
-							onProjectSelect={(proj) => {
-								handleSelectProject(proj);
-								// optionally close the drawer
-								setIsMobileSidebarOpen(false);
-							}}
+							onProjectSelect={handleProjectClick}
 						/>
 					</div>
 				</MobileDrawer>
@@ -129,37 +141,40 @@ export default function Sidebar({
 				)}
 			</button>
 			{/* Add Project Form */}
-
-			<AddProjectForm
+			<div
+				className={`transition-all duration-300 ${
+					isSidebarCollapsed ? 'hidden' : ''
+				}`}>
+				<button
+					className='bg-orange-500 text-white px-4 py-1 mb-2 rounded-lg shadow uppercase'
+					onClick={() => setIsAddProjectModalOpen(true)}>
+					Add New Project
+				</button>
+			</div>
+			<AddProjectModal
+				isOpen={isAddProjectModalOpen}
+				onClose={() => setIsAddProjectModalOpen(false)}
 				newProjectName={newProjectName}
 				newProjectDescription={newProjectDescription}
 				setNewProjectName={setNewProjectName}
 				setNewProjectDescription={setNewProjectDescription}
 				handleAddProject={handleAddProject}
-				onClose={() => setShowAddForm(false)}
-				isSidebarCollapsed={isSidebarCollapsed}
 			/>
-
-			<h2
-				className={`text-xl font-semibold mb-4 ${
+			<div
+				className={`p-1 bg-gray-700 rounded-xl  transition-all duration-300 ${
 					isSidebarCollapsed ? 'hidden' : ''
 				}`}>
-				Projects
-			</h2>
-			<ul className={`${isSidebarCollapsed ? 'hidden' : ''}`}>
-				{projects.map((project) => (
-					<li
-						key={project.id}
-						className={`cursor-pointer m-1 p-2 rounded ${
-							selectedProject?.id === project.id
-								? 'bg-gray-600'
-								: 'hover:bg-gray-700'
-						}`}
-						onClick={() => handleSelectProject(project)}>
-						{project.name}
-					</li>
-				))}
-			</ul>
+				<h2 className={`text-xl font-semibold m-2`}>Active Projects</h2>
+				<ProjectList
+					projects={projects}
+					selectedProject={selectedProject}
+					onProjectSelect={(proj) => {
+						handleSelectProject(proj);
+						// optionally close the drawer
+						setIsMobileSidebarOpen(false);
+					}}
+				/>
+			</div>
 		</div>
 	);
 }

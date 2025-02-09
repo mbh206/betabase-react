@@ -22,20 +22,20 @@ export default function MobileDrawer({ isOpen, onClose, children }) {
 		<div className=''>
 			{isOpen && (
 				<div
-					className='fixed inset-0 bg-black bg-opacity-40 z-40'
+					className='fixed inset-0 bg-black bg-opacity-50 z-40'
 					onClick={onClose}
 				/>
 			)}
 			<div
 				className={`
-          fixed top-0 left-0 w-64 h-full
+          fixed top-0 left-0 w-64 h-full w-full
           bg-gray-800 text-white z-50
           transform transition-transform duration-300
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-				<div className='p-3 space-y-2 overflow-auto h-full'>
+				<div className='p-4 space-y-3 overflow-auto h-full'>
 					{/* Here’s where we render the icons on mobile */}
-					<ul className='flex gap-3 mt-2 mb-4 uppercase font-bold text-xl'>
+					<ul className='flex gap-4 mt-2 mb-4 uppercase font-bold text-xl'>
 						<li>
 							<Link to='/'>
 								{/* Home icon */}

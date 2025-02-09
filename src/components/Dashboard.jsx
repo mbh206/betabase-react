@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import {
 	collection,
@@ -9,18 +10,24 @@ import {
 	updateDoc,
 	deleteDoc,
 	addDoc,
+	onSnapshot,
 } from 'firebase/firestore';
 import Sidebar from './Sidebar';
 import ProjectDetail from './ProjectDetail';
+import AddProjectModal from './AddProjectModal';
+import ProjectList from './ProjectList';
 import TaskModal from './TaskModal';
+import defaultSteps from '../templates/defaultStepTemplate';
 
-export default function Dashboard() {
+export default function Dashboard({ selectedProject, setSelectedProject }) {
+	const navigate = useNavigate();
+	const { projectId } = useParams();
 	const [projects, setProjects] = useState([]);
 	const [newProjectName, setNewProjectName] = useState('');
 	const [newProjectDescription, setNewProjectDescription] = useState('');
 	const [editingProject, setEditingProject] = useState(null);
-	const [selectedProject, setSelectedProject] = useState(null);
 	const [selectedStep, setSelectedStep] = useState(0);
+	const [selectedDueDate, setSelectedDueDate] = useState(0);
 	const [tasks, setTasks] = useState([]);
 	const [newTaskTitle, setNewTaskTitle] = useState('');
 	const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -32,6 +39,7 @@ export default function Dashboard() {
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 	const [activeTaskModal, setActiveTaskModal] = useState(null);
 	const [showAddProjectForm, setShowAddProjectForm] = useState(false);
+	const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
 
 	useEffect(() => {
 		const fetchProjects = async () => {
@@ -56,7 +64,6 @@ export default function Dashboard() {
 				}));
 				project.tasks = projectTasks;
 			}
-
 			setProjects(fetchedProjects);
 		};
 
@@ -67,6 +74,31 @@ export default function Dashboard() {
 		fetchProjects();
 	}, []);
 
+	useEffect(() => {
+		if (!projectId) {
+			setSelectedProject(null);
+			return;
+		}
+		const found = projects.find((p) => p.id === projectId) || null;
+		setSelectedProject(found);
+	}, [projectId, projects, setSelectedProject]);
+
+	useEffect(() => {
+		if (selectedProject) {
+			const tasksRef = collection(db, 'projects', selectedProject.id, 'tasks');
+			const unsubscribe = onSnapshot(tasksRef, (snapshot) => {
+				const tasksData = snapshot.docs.map((doc) => ({
+					id: doc.id,
+					...doc.data(),
+				}));
+				setTasks(tasksData);
+			});
+			return () => unsubscribe();
+		} else {
+			setTasks([]);
+		}
+	}, [selectedProject]);
+
 	const handleSelectProject = (project) => {
 		setSelectedProject(project);
 		setSelectedStep(0);
@@ -75,362 +107,25 @@ export default function Dashboard() {
 			setIsSidebarCollapsed(false);
 		}
 		setIsTaskHintCollapsed(false);
+		navigate(`/dashboard/${project.id}`);
 	};
 
-	const handleAddProject = async () => {
+	const handleAddProject = async (collaboratorsArray = []) => {
 		if (!newProjectName.trim()) return;
 
 		try {
 			const projectRef = collection(db, 'projects');
+			const ownerUid = auth.currentUser.uid;
+			const allowedUsers = Array.from(
+				new Set([ownerUid, ...collaboratorsArray])
+			);
 			const newProject = {
 				name: newProjectName,
 				description: newProjectDescription,
-				owner: auth.currentUser.uid,
-				steps: [
-					{
-						title: 'Ideation & Research',
-						completed: false,
-
-						tasks: [
-							{
-								title: 'Problem Definition',
-								description:
-									'Clearly articulate the issue your app aims to solve. Who is it for, and why does it matter?',
-								issues: [],
-								challenges: [
-									'Need to confirm target audience scope',
-									'Validate real user pain points through data',
-								],
-								images: [],
-								links: ['https://example.com/market-research-report.pdf'],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Market Analysis',
-								description:
-									'Study the competitive landscape. Identify existing solutions and see how your product can stand out.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: ['https://example.com/competitor-analysis'],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'User Research',
-								description:
-									'Gather insights from potential users about their needs and pain points. Conduct interviews, surveys, or focus groups to validate your hypothesis.',
-								issues: ['Need participant consent forms'],
-								challenges: ['Scheduling interviews across time zones'],
-								images: [],
-								links: [],
-								awaiting: 'Recruiting participants from user group',
-								assignee: 'Jane Smith',
-							},
-							{
-								title: 'Feasibility Analysis',
-								description:
-									'Assess technical feasibility, potential costs, and revenue models to ensure the concept can be developed sustainably.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'Gathering & Planning',
-						completed: false,
-						tasks: [
-							{
-								title: 'Define Key Features',
-								description:
-									'List core functionalities the app must have to satisfy initial user needs (i.e., the minimum viable product or MVP feature set).',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Create User Stories',
-								description:
-									'Translate app features into stories that describe the who, what, and why of each feature from a user perspective.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Technical Considerations',
-								description:
-									'Decide on the technology stack (e.g., native vs. cross-platform for mobile apps), backend infrastructure, data storage, and third-party integrations.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Roadmap & Milestones',
-								description:
-									'Outline a timeline with key deliverables. Plan your sprints or development cycles if following Agile methodologies.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'UX/UI & Prototyping',
-						completed: false,
-						tasks: [
-							{
-								title: 'Information Architecture',
-								description:
-									'Define the hierarchy of information and navigational flow.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Wireframing',
-								description:
-									'Sketch low-fidelity wireframes to visualize layout and user journeys.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Interactive Prototypes',
-								description:
-									'Build high-fidelity mockups or clickable prototypes to gather stakeholder and user feedback early.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Design System/Style Guide',
-								description:
-									'Establish consistent visual guidelines (colors, typography, icons) that will be used throughout the product.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'Development (MVP)',
-						completed: false,
-						tasks: [
-							{
-								title: 'Set Up the Development Environment',
-								description:
-									'Configure repositories, CI/CD pipeline, and any necessary tools for collaborative work.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Iterative Feature Implementation',
-								description:
-									'Start coding the MVP features, integrating design elements and functionality in a modular, testable manner.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Regular Checkpoints',
-								description:
-									'Conduct daily standups (if Agile/Scrum) and frequent demos to keep the team aligned on progress.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Version Control & Documentation',
-								description:
-									'Use version control (e.g., Git) rigorously and maintain clear documentation for the codebase and APIs.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'Testing & QA',
-						completed: false,
-						tasks: [
-							{
-								title: 'Unit Testing',
-								description:
-									'Developers test individual components to ensure each module works as intended.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Integration Testing',
-								description:
-									'Check that different parts of the system work correctly together (e.g., front-end with back-end APIs).',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'User Acceptance Testing (UAT)',
-								description:
-									'Involve a small group of real or representative users to test the app under real-world conditions.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Performance & Security Testing',
-								description:
-									'Ensure the app meets necessary performance benchmarks (speed, stability) and is secure from common vulnerabilities.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'Prep for Beta',
-						completed: false,
-						tasks: [
-							{
-								title: 'Refine the MVP',
-								description:
-									'Incorporate feedback from testing to fix critical bugs, improve usability, and stabilize core features.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Beta User Selection',
-								description:
-									'Identify a group of beta testers who represent your target audience. They could be existing users or volunteers recruited via sign-ups.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Beta Release & Distribution',
-								description:
-									'Deploy a beta version (TestFlight for iOS, internal testing tracks for Android, or invite-based web access).',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Feedback Collection Mechanisms',
-								description:
-									'Implement in-app feedback forms, bug-reporting tools, or surveys to capture user feedback rapidly.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-					{
-						title: 'Beta Testing & Iteration',
-						completed: false,
-						tasks: [
-							{
-								title: 'Monitor Key Metrics',
-								description:
-									'Track session length, crashes, user retention, and feature usage to assess where improvements are needed.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Iterative Fixes & Updates',
-								description:
-									'Quickly address bugs and usability issues uncovered by beta users. Release updates with improvements and new features if feasible within the beta phase.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-							{
-								title: 'Communication with Beta Testers',
-								description:
-									'Engage testers via email updates or community forums. Show appreciation for their feedback and keep them informed about upcoming changes.',
-								issues: [],
-								challenges: [],
-								images: [],
-								links: [],
-								awaiting: '',
-								assignee: '',
-							},
-						],
-					},
-				],
+				owner: ownerUid,
+				collaborators: collaboratorsArray,
+				allowedUsers: allowedUsers,
+				steps: defaultSteps,
 				createdAt: new Date(),
 			};
 			const docRef = await addDoc(projectRef, newProject);
@@ -441,6 +136,7 @@ export default function Dashboard() {
 			setNewProjectDescription('');
 			setShowAddProjectForm(false);
 			setSelectedProject(createdProject);
+			navigate(`/dashboard/${createdProject.id}`);
 		} catch (error) {
 			console.error('Error adding project:', error);
 		}
@@ -504,21 +200,63 @@ export default function Dashboard() {
 	const handleDragEnd = async (result) => {
 		if (!result.destination) return;
 
-		const { source, destination } = result;
-		const draggedTask = tasks[source.index];
+		const { source, destination, draggableId } = result;
 
-		if (source.droppableId === destination.droppableId) {
-			const updatedTasks = Array.from(tasks);
-			const [movedTask] = updatedTasks.splice(source.index, 1);
-			updatedTasks.splice(destination.index, 0, movedTask);
-			updatedTasks.forEach((t, i) => {
-				t.order = i;
-			});
+		if (source.droppableId !== destination.droppableId) {
+			const updatedStep = Number(destination.droppableId);
+			const updatedTasks = tasks.map((task) =>
+				task.id === draggableId ? { ...task, step: updatedStep } : task
+			);
 			setTasks(updatedTasks);
 
-			await updateTaskOrder(updatedTasks);
+			try {
+				const taskRef = doc(
+					db,
+					'projects',
+					selectedProject.id,
+					'tasks',
+					draggableId
+				);
+				await updateDoc(taskRef, { step: updatedStep });
+			} catch (error) {
+				console.error('Error updating task step:', error);
+			}
 		} else {
-			await updateTaskStep(draggedTask.id, parseInt(destination.droppableId));
+			const columnTasks = tasks
+				.filter((task) => task.step === Number(source.droppableId))
+				.sort((a, b) => a.order - b.order);
+
+			const [removedTask] = columnTasks.splice(source.index, 1);
+			columnTasks.splice(destination.index, 0, removedTask);
+
+			const updatedColumnTasks = columnTasks.map((task, index) => ({
+				...task,
+				order: index,
+			}));
+
+			const updatedTasks = tasks.map((task) => {
+				if (task.step === Number(source.droppableId)) {
+					return updatedColumnTasks.find((t) => t.id === task.id) || task;
+				}
+				return task;
+			});
+
+			setTasks(updatedTasks);
+
+			for (const task of updatedColumnTasks) {
+				try {
+					const taskRef = doc(
+						db,
+						'projects',
+						selectedProject.id,
+						'tasks',
+						task.id
+					);
+					await updateDoc(taskRef, { order: task.order });
+				} catch (error) {
+					console.error('Error updating task order:', error);
+				}
+			}
 		}
 	};
 
@@ -566,17 +304,24 @@ export default function Dashboard() {
 			const newTask = {
 				title: newTaskTitle,
 				description: newTaskDescription,
-				dueDate: '',
+				dueDate: selectedDueDate,
 				step: selectedStep,
 				status: 'To Do',
 				priority: priority || 'Medium',
 				order: tasks.length,
+				issues: [],
+				challenges: [],
+				images: [],
+				links: [],
+				awaiting: '',
+				assignee: '',
 			};
 			const docRef = await addDoc(taskRef, newTask);
 
 			setTasks([...tasks, { ...newTask, id: docRef.id }]);
 			setNewTaskTitle('');
 			setNewTaskDescription('');
+			setSelectedDueDate('');
 		} catch (error) {
 			console.error('Error adding task:', error);
 		}
@@ -612,22 +357,34 @@ export default function Dashboard() {
 
 	const handleSaveTask = async (updatedTask) => {
 		try {
-			const taskRef = doc(
-				db,
-				'projects',
-				selectedProject.id,
-				'tasks',
-				updatedTask.id
-			);
-			await updateDoc(taskRef, updatedTask);
-			setTasks((prevTasks) =>
-				prevTasks.map((task) =>
-					task.id === updatedTask.id ? updatedTask : task
-				)
-			);
+			if (updatedTask.id) {
+				const taskRef = doc(
+					db,
+					'projects',
+					selectedProject.id,
+					'tasks',
+					updatedTask.id
+				);
+				await updateDoc(taskRef, updatedTask);
+				setTasks((prevTasks) =>
+					prevTasks.map((task) =>
+						task.id === updatedTask.id ? updatedTask : task
+					)
+				);
+			} else {
+				const taskCollectionRef = collection(
+					db,
+					'projects',
+					selectedProject.id,
+					'tasks'
+				);
+				const docRef = await addDoc(taskCollectionRef, updatedTask);
+				const newTask = { ...updatedTask, id: docRef.id };
+				setTasks((prevTasks) => [...prevTasks, newTask]);
+			}
 			setActiveTaskModal(null);
 		} catch (error) {
-			console.log('Error updating task: ', error);
+			console.error('Error saving task: ', error);
 		}
 	};
 
@@ -635,6 +392,7 @@ export default function Dashboard() {
 		<div className='flex h-full min-h-screen'>
 			{/* Sidebar */}
 			<Sidebar
+				className='w-64 flex-shrink-0'
 				projects={projects}
 				selectedProject={selectedProject}
 				newProjectName={newProjectName}
@@ -653,24 +411,30 @@ export default function Dashboard() {
 				showAddProjectForm={showAddProjectForm}
 			/>
 			{/* Main Workspace */}
-			<div className={`flex-1 p-8 bg-gray-100 transition-all duration-300`}>
+			<div
+				className={`flex-1 flex flex-col overflow-hidden bg-gray-100 px-2 transition-all duration-300`}>
 				{selectedProject ? (
 					<ProjectDetail
 						project={selectedProject}
+						tasks={tasks}
 						selectedStep={selectedStep}
 						setSelectedStep={setSelectedStep}
+						selectedDueDate={selectedDueDate}
+						setSelectedDueDate={setSelectedDueDate}
 						calculateStepProgress={calculateStepProgress}
 						isMobile={isMobile}
 						isTaskHintCollapsed={isTaskHintCollapsed}
 						setIsTaskHintCollapsed={setIsTaskHintCollapsed}
-						filteredTasks={filteredTasks}
+						allTasks={tasks}
 						handleDragEnd={handleDragEnd}
 						newTaskTitle={newTaskTitle}
 						newTaskDescription={newTaskDescription}
 						handleAddTask={handleAddTask}
 						handleEditTask={handleEditTask}
+						selectedProject={selectedProject}
 						handleDeleteTask={handleDeleteTask}
 						openTaskModal={openTaskModal}
+						handleSelectProject={handleSelectProject}
 						handleEditProject={handleEditProject}
 						handleDeleteProject={handleDeleteProject}
 						setEditingProject={setEditingProject}
@@ -679,15 +443,30 @@ export default function Dashboard() {
 					/>
 				) : (
 					<div className='flex flex-col items-center justify-center h-full'>
-						<h2 className='text-2xl font-bold mb-4'>No project selected!</h2>
-						<p>
-							Please select one below or add a new project from the sidebar.
-						</p>
-						<ul>
-							{projects.map((project) => {
-								<li>project.name</li>;
-							})}
-						</ul>
+						<h2 className='text-2xl font-bold mb-2'>No project selected!</h2>
+						<button
+							className='bg-orange-500 text-white px-4 py-1 rounded-lg shadow uppercase'
+							onClick={() => setIsAddProjectModalOpen(true)}>
+							Add New Project
+						</button>
+						<AddProjectModal
+							isOpen={isAddProjectModalOpen}
+							onClose={() => setIsAddProjectModalOpen(false)}
+							newProjectName={newProjectName}
+							newProjectDescription={newProjectDescription}
+							setNewProjectName={setNewProjectName}
+							setNewProjectDescription={setNewProjectDescription}
+							handleAddProject={handleAddProject}
+						/>
+						{projects && (
+							<>
+								<p>Or select one below</p>
+								<ProjectList
+									projects={projects}
+									handleSelectProject={handleSelectProject}
+								/>
+							</>
+						)}
 					</div>
 				)}
 			</div>
@@ -743,6 +522,7 @@ export default function Dashboard() {
 					task={activeTaskModal}
 					onClose={() => setActiveTaskModal(null)}
 					onSave={handleSaveTask}
+					projectCollaborators={selectedProject.collaborators || []}
 				/>
 			)}
 		</div>

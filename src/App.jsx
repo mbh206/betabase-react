@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Dashboard from './components/Dashboard';
@@ -10,6 +10,12 @@ import PrivateRoute from './components/PrivateRoute';
 import NavBar from './components/NavBar';
 
 function App() {
+	const [selectedProject, setSelectedProject] = useState(null);
+
+	function handleSelectProject(project) {
+		setSelectedProject(project);
+	}
+
 	return (
 		<>
 			<NavBar />
@@ -30,10 +36,14 @@ function App() {
 
 				{/* Private routes */}
 				<Route
-					path='/dashboard'
+					path='/dashboard/:projectId?'
 					element={
 						<PrivateRoute>
-							<Dashboard />
+							<Dashboard
+								selectedProject={selectedProject}
+								setSelectedProject={setSelectedProject}
+								handleSelectProject={handleSelectProject}
+							/>
 						</PrivateRoute>
 					}
 				/>
@@ -41,7 +51,10 @@ function App() {
 					path='/profile'
 					element={
 						<PrivateRoute>
-							<Profile />
+							<Profile
+								selectedProject={selectedProject}
+								handleSelectProject={handleSelectProject}
+							/>
 						</PrivateRoute>
 					}
 				/>
