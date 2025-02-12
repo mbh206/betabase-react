@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Notifications from './Notifications';
 
 export default function NavBar() {
 	const { currentUser } = useAuth();
 	const navigate = useNavigate();
+	const [showNotifications, setShowNotifications] = useState([]);
+	const dropdownRef = useRef(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+				setShowNotifications(false);
+			}
+		};
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, []);
 
 	const handleLogout = async () => {
 		try {
@@ -38,7 +51,7 @@ export default function NavBar() {
 							viewBox='0 0 24 24'
 							strokeWidth={1.5}
 							stroke='currentColor'
-							className='size-11 bg-blue-200 rounded-full p-2 shadow hover:shadow-lg'>
+							className='size-7 text-blue-900 hover:text-blue-500'>
 							<path
 								strokeLinecap='round'
 								strokeLinejoin='round'
@@ -49,6 +62,45 @@ export default function NavBar() {
 				</li>
 				{currentUser ? (
 					<li>
+						{showNotifications ? (
+							<button onClick={() => setShowNotifications(!showNotifications)}>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									fill='none'
+									viewBox='0 0 24 24'
+									strokeWidth={1.5}
+									stroke='currentColor'
+									className='size-7 text-blue-900 hover:text-blue-500'>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										d='M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5'
+									/>
+								</svg>
+							</button>
+						) : (
+							<button onClick={() => setShowNotifications(!showNotifications)}>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									fill='none'
+									viewBox='0 0 24 24'
+									strokeWidth={1.5}
+									stroke='currentColor'
+									className='size-7 text-blue-900 hover:text-blue-500'>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										d='M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0'
+									/>
+								</svg>
+							</button>
+						)}
+					</li>
+				) : (
+					''
+				)}
+				{currentUser ? (
+					<li>
 						<Link to='/profile'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -56,7 +108,7 @@ export default function NavBar() {
 								viewBox='0 0 24 24'
 								strokeWidth={1.5}
 								stroke='currentColor'
-								className='size-11 bg-blue-200 rounded-full p-2 shadow hover:shadow-lg'>
+								className='size-7 text-blue-900 hover:text-blue-500'>
 								<path
 									strokeLinecap='round'
 									strokeLinejoin='round'
@@ -77,7 +129,7 @@ export default function NavBar() {
 								viewBox='0 0 24 24'
 								strokeWidth={1.5}
 								stroke='currentColor'
-								className='size-11 bg-blue-200 rounded-full p-2 shadow hover:shadow-lg'>
+								className='size-7 text-blue-900 hover:text-blue-500'>
 								<path
 									strokeLinecap='round'
 									strokeLinejoin='round'
@@ -89,6 +141,7 @@ export default function NavBar() {
 				) : (
 					<li>
 						{/* Use a button to call handleLogout */}
+
 						<button
 							onClick={handleLogout}
 							className='focus:outline-none'>
@@ -98,7 +151,7 @@ export default function NavBar() {
 								viewBox='0 0 24 24'
 								strokeWidth={1.5}
 								stroke='currentColor'
-								className='size-11 bg-blue-200 rounded-full p-2 shadow hover:shadow-lg'>
+								className='size-7 text-blue-900 hover:text-blue-500'>
 								<path
 									strokeLinecap='round'
 									strokeLinejoin='round'
@@ -109,6 +162,13 @@ export default function NavBar() {
 					</li>
 				)}
 			</ul>
+			{showNotifications && (
+				<div
+					ref={dropdownRef}
+					className='absolute right-0 top-16 mt-2 w-80 bg-white shadow-lg rounded z-50'>
+					<Notifications />
+				</div>
+			)}
 		</nav>
 	);
 }

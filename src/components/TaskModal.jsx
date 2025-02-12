@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import UserOption from './UserOption';
 
 export default function TaskModal({
 	task,
@@ -153,12 +154,11 @@ export default function TaskModal({
 							value={localTask.assignee || ''}
 							onChange={(e) => handleLocalChange('assignee', e.target.value)}>
 							<option value=''>Unassigned</option>
-							{projectCollaborators.map((collab) => (
-								<option
-									key={collab}
-									value={collab}>
-									{collab}
-								</option>
+							{projectCollaborators.map((collabUid) => (
+								<UserOption
+									key={collabUid}
+									uid={collabUid}
+								/>
 							))}
 						</select>
 					</div>

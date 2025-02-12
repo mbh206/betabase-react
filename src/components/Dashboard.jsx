@@ -11,13 +11,17 @@ import {
 	deleteDoc,
 	addDoc,
 	onSnapshot,
+	serverTimestamp,
 } from 'firebase/firestore';
 import Sidebar from './Sidebar';
 import ProjectDetail from './ProjectDetail';
 import AddProjectModal from './AddProjectModal';
 import ProjectList from './ProjectList';
 import TaskModal from './TaskModal';
+import { UserName } from './UserName';
+import CollaboratorsMultiSelect from './CollaboratorsMultiSelect';
 import defaultSteps from '../templates/defaultStepTemplate';
+import CollaboratorsCheckboxList from '../components/CollaboratorsCheckboxList';
 
 export default function Dashboard({ selectedProject, setSelectedProject }) {
 	const navigate = useNavigate();
@@ -43,28 +47,31 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 
 	useEffect(() => {
 		const fetchProjects = async () => {
-			const q = query(
+			const ownerQuery = query(
 				collection(db, 'projects'),
 				where('owner', '==', auth.currentUser.uid)
 			);
-			const projSnapshot = await getDocs(q);
-			const fetchedProjects = projSnapshot.docs.map((doc) => ({
+			const ownerSnapshot = await getDocs(ownerQuery);
+			const ownerProjects = ownerSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data(),
 			}));
 
-			for (let project of fetchedProjects) {
-				const tasksSnap = await getDocs(
-					collection(db, 'projects', project.id, 'tasks')
-				);
-				const projectTasks = tasksSnap.docs.map((taskDoc) => ({
-					id: taskDoc.id,
-					...taskDoc.data(),
-					projectId: project.id,
-				}));
-				project.tasks = projectTasks;
-			}
-			setProjects(fetchedProjects);
+			const collabQuery = query(
+				collection(db, 'projects'),
+				where('collaborators', 'array-contains', auth.currentUser.uid)
+			);
+			const collabSnapshot = await getDocs(collabQuery);
+			const collabProjects = collabSnapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			}));
+
+			const projectsMap = new Map();
+			ownerProjects.forEach((project) => projectsMap.set(project.id, project));
+			collabProjects.forEach((project) => projectsMap.set(project.id, project));
+
+			setProjects(Array.from(projectsMap.values()));
 		};
 
 		const width = window.innerWidth;
@@ -116,17 +123,14 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 		try {
 			const projectRef = collection(db, 'projects');
 			const ownerUid = auth.currentUser.uid;
-			const allowedUsers = Array.from(
-				new Set([ownerUid, ...collaboratorsArray])
-			);
 			const newProject = {
 				name: newProjectName,
 				description: newProjectDescription,
 				owner: ownerUid,
 				collaborators: collaboratorsArray,
-				allowedUsers: allowedUsers,
 				steps: defaultSteps,
-				createdAt: new Date(),
+				createdAt: serverTimestamp(),
+				updatedAt: serverTimestamp(),
 			};
 			const docRef = await addDoc(projectRef, newProject);
 			const createdProject = { id: docRef.id, ...newProject };
@@ -316,9 +320,9 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 				awaiting: '',
 				assignee: '',
 			};
-			const docRef = await addDoc(taskRef, newTask);
+			await addDoc(taskRef, newTask);
 
-			setTasks([...tasks, { ...newTask, id: docRef.id }]);
+			// setTasks([...tasks, { ...newTask, id: docRef.id }]);
 			setNewTaskTitle('');
 			setNewTaskDescription('');
 			setSelectedDueDate('');
@@ -389,7 +393,7 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 	};
 
 	return (
-		<div className='flex h-full min-h-screen'>
+		<div className='flex  h-[calc(100vh-85px)]'>
 			{/* Sidebar */}
 			<Sidebar
 				className='w-64 flex-shrink-0'
@@ -474,8 +478,28 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 			{/* Edit Project Modal */}
 			{editingProject && (
 				<div className='fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50'>
-					<div className='bg-white w-11/12 max-w-2xl p-6 rounded shadow-md'>
-						<h2 className='text-2xl font-bold mb-4'>Edit Project</h2>
+					<div className='bg-white w-11/12 max-w-2xl px-4 pb-2 pt-1 rounded shadow-md'>
+						<div className='flex justify-between'>
+							<h2 className='text-xl font-bold my-2'>Edit Project</h2>
+							<button
+								onClick={() => setEditingProject(null)}
+								className='text-gray-600 hover:text-gray-900'
+								aria-label='Close modal'>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									className='h-6 w-6'
+									fill='none'
+									viewBox='0 0 24 24'
+									stroke='currentColor'>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										strokeWidth={2}
+										d='M6 18L18 6M6 6l12 12'
+									/>
+								</svg>
+							</button>
+						</div>
 						<input
 							type='text'
 							placeholder='Project Name'
@@ -497,20 +521,28 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 							}
 							className='border p-2 rounded w-full mb-2'
 						/>
+						<label className='block text-gray-700 mb-1'>Collaborators</label>
+						<CollaboratorsCheckboxList
+							value={editingProject.collaborators || []}
+							onChange={(selected) =>
+								setEditingProject({
+									...editingProject,
+									collaborators: selected,
+								})
+							}
+							currentUser={auth.currentUser}
+						/>
 						<button
 							onClick={() =>
 								handleEditProject(editingProject.id, {
 									name: editingProject.name,
 									description: editingProject.description,
+									collaborators: editingProject.collaborators || [],
+									updatedAt: serverTimestamp(),
 								})
 							}
-							className='bg-blue-500 text-white px-4 py-2 rounded'>
+							className='bg-sky-500 text-white px-4 py-2 rounded w-full mb-2'>
 							Save Changes
-						</button>
-						<button
-							onClick={() => setEditingProject(null)}
-							className='bg-gray-500 text-white px-4 py-2 rounded ml-2'>
-							Cancel
 						</button>
 					</div>
 				</div>

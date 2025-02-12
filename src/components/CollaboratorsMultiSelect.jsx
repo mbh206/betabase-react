@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import CollaboratorsCheckboxList from './CollaboratorsCheckboxList';
-import { useAuth } from '../AuthContext';
 import {
 	collection,
 	query,
@@ -11,17 +9,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
-export default function AddProjectForm({
-	newProjectName,
-	newProjectDescription,
-	setNewProjectName,
-	setNewProjectDescription,
-	handleAddProject,
-	onClose,
+export default function CollaboratorsMultiSelect({
+	value,
+	onChange,
+	currentUser,
 }) {
-	const { currentUser } = useAuth();
 	const [connectedUsers, setConnectedUsers] = useState([]);
-	const [selectedCollaborators, setSelectedCollaborators] = useState([]);
 
 	useEffect(() => {
 		async function fetchConnectedUsers() {
@@ -49,7 +42,6 @@ export default function AddProjectForm({
 				}));
 
 				const allConns = [...conns1, ...conns2];
-
 				const uidsSet = new Set();
 				allConns.forEach((conn) => {
 					const otherUid =
@@ -60,7 +52,7 @@ export default function AddProjectForm({
 				});
 				const uids = Array.from(uidsSet);
 
-				const connectedUsersArray = await Promise.all(
+				const usersArray = await Promise.all(
 					uids.map(async (uid) => {
 						const userDoc = await getDoc(doc(db, 'users', uid));
 						if (userDoc.exists()) {
@@ -69,47 +61,31 @@ export default function AddProjectForm({
 						return { uid, username: uid, email: uid };
 					})
 				);
-				setConnectedUsers(connectedUsersArray);
+				setConnectedUsers(usersArray);
 			} catch (error) {
 				console.error('Error fetching connected users:', error);
 			}
 		}
-
 		fetchConnectedUsers();
 	}, [currentUser]);
 
-	const onSubmit = () => {
-		handleAddProject(selectedCollaborators);
-		if (onClose) onClose();
-	};
-
 	return (
-		<div>
-			<input
-				type='text'
-				placeholder='Project Name'
-				value={newProjectName}
-				onChange={(e) => setNewProjectName(e.target.value)}
-				className='text-gray-500 border p-1 rounded w-full mb-2'
-			/>
-			<input
-				type='text'
-				placeholder='Project Description'
-				value={newProjectDescription}
-				onChange={(e) => setNewProjectDescription(e.target.value)}
-				className='text-gray-500 border p-1 rounded w-full mb-2'
-			/>
-			<label className='block text-gray-700 mb-1'>Select Collaborators:</label>
-			<CollaboratorsCheckboxList
-				value={selectedCollaborators}
-				onChange={setSelectedCollaborators}
-				currentUser={currentUser}
-			/>
-			<button
-				onClick={onSubmit}
-				className='bg-sky-500 text-white px-4 py-2 rounded w-full mb-2'>
-				Add Project
-			</button>
-		</div>
+		<select
+			multiple
+			value={value}
+			onChange={(e) => {
+				const options = Array.from(e.target.selectedOptions);
+				const selected = options.map((option) => option.value);
+				onChange(selected);
+			}}
+			className='border p-1 rounded w-full mb-2'>
+			{connectedUsers.map((user) => (
+				<option
+					key={user.uid}
+					value={user.uid}>
+					{user.displayName || user.email}
+				</option>
+			))}
+		</select>
 	);
 }

@@ -9,7 +9,7 @@ export default function AddProjectModal({ isOpen, onClose, ...formProps }) {
 			className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
 			onClick={onClose}>
 			<div
-				className='relative bg-white p-6 rounded shadow-lg w-full max-w-lg'
+				className='relative bg-white px-4 pb-2 pt-0 rounded shadow-lg w-full max-w-lg'
 				onClick={(e) => e.stopPropagation()}>
 				<button
 					onClick={onClose}

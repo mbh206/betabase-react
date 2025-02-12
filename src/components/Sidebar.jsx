@@ -94,7 +94,10 @@ export default function Sidebar({
 						<ProjectList
 							projects={projects}
 							selectedProject={selectedProject}
-							onProjectSelect={handleProjectClick}
+							onProjectSelect={(proj) => {
+								handleSelectProject(proj);
+								setIsMobileSidebarOpen(false);
+							}}
 						/>
 					</div>
 				</MobileDrawer>
@@ -170,7 +173,6 @@ export default function Sidebar({
 					selectedProject={selectedProject}
 					onProjectSelect={(proj) => {
 						handleSelectProject(proj);
-						// optionally close the drawer
 						setIsMobileSidebarOpen(false);
 					}}
 				/>

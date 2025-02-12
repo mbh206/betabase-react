@@ -1,9 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-/**
- * A simple list of projects that calls onProjectSelect when clicked.
- */
 export default function ProjectList({ projects, selectedProject }) {
 	return (
 		<ul>

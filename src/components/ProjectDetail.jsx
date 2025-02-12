@@ -1,6 +1,7 @@
 // src/components/Dashboard/ProjectDetail.jsx
 import React from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { UserName } from '../components/UserName';
 
 export default function ProjectDetail({
 	project,
@@ -49,7 +50,7 @@ export default function ProjectDetail({
 		<div className='project-detail flex flex-col h-full overflow-hidden'>
 			<div className='header px-4 py-2 flex-shrink-0'>
 				<div className='flex flex-col sm:flex-row justify-between items-center mb-2 gap-2'>
-					<div className='bg-white p-1 flex gap-2'>
+					<div className='border-b p-1 flex gap-2'>
 						<h2 className='text-2xl font-bold uppercase mx-1'>
 							{project.name}
 						</h2>
@@ -58,16 +59,40 @@ export default function ProjectDetail({
 								e.stopPropagation();
 								setEditingProject(project);
 							}}
-							className='bg-teal-500 hover:shadow-lg shadow opacity-80 text-white text-xs px-2 py-1 m-1 rounded'>
-							Edit
+							className='bg-teal-500 hover:shadow-lg shadow text-white text-xs m-1 rounded uppercase'>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={1.5}
+								stroke='currentColor'
+								className='w-6 h-6 text-white rounded p-1'>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10'
+								/>
+							</svg>
 						</button>
 						<button
 							onClick={(e) => {
 								e.stopPropagation();
 								handleDeleteProject(project.id);
 							}}
-							className='bg-red-500 hover:shadow-lg shadow opacity-80 text-white text-xs px-2 py-1 m-1 rounded'>
-							Delete
+							className='bg-red-500 hover:shadow-lg shadow text-white text-xs m-1 rounded'>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={1.5}
+								stroke='currentColor'
+								className='w-6 h-6 text-white rounded p-1'>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0'
+								/>
+							</svg>
 						</button>
 					</div>
 					<div>
@@ -87,9 +112,23 @@ export default function ProjectDetail({
 						</button>
 					</div>
 				</div>
-				<div className='mb-2 p-1 text-gray-800 rounded'>
-					{project.description}
+				<div className='flex gap-2 mb-1 text-gray-800 rounded'>
+					<p>
+						<strong>Owner:</strong> <UserName uid={project.owner} />
+					</p>
+					<p>
+						<strong>Collaborators:</strong>{' '}
+						{project.collaborators && project.collaborators.length > 0
+							? project.collaborators.map((uid, index) => (
+									<React.Fragment key={uid}>
+										<UserName uid={uid} />
+										{index < project.collaborators.length - 1 ? ', ' : ''}
+									</React.Fragment>
+							  ))
+							: 'None'}
+					</p>
 				</div>
+				<div className='mb-2 text-gray-800 rounded'>{project.description}</div>
 			</div>
 
 			<div className='content flex-1 overflow-hidden max-w-screen'>
@@ -235,78 +274,80 @@ export default function ProjectDetail({
 																		Due: {task.dueDate || 'No due date yet'}
 																	</span>
 																</div>
-																<select
-																	value={task.priority}
-																	onChange={(e) =>
-																		handleEditTask(
-																			task.id,
-																			'priority',
-																			e.target.value
-																		)
-																	}
-																	className={`text-sm font-semibold mx-2 ${
-																		task.priority === 'High'
-																			? 'text-red-500'
-																			: task.priority === 'Medium'
-																			? 'text-orange-500'
-																			: 'text-green-500'
-																	}`}>
-																	<option
-																		value='High'
-																		className='text-red-500'>
-																		High Priority
-																	</option>
-																	<option
-																		value='Medium'
-																		className='text-orange-500'>
-																		Medium Priority
-																	</option>
-																	<option
-																		value='Low'
-																		className='text-green-500'>
-																		Low Priority
-																	</option>
-																</select>
-																<div className='flex items-center'>
+																<div>
 																	<select
-																		value={task.status}
+																		value={task.priority}
 																		onChange={(e) =>
 																			handleEditTask(
 																				task.id,
-																				'status',
+																				'priority',
 																				e.target.value
 																			)
 																		}
-																		className={`text-white py-1 px-2 rounded ${
-																			task.status === 'To Do'
-																				? 'bg-blue-500'
-																				: task.status === 'In Progress'
-																				? 'bg-green-500'
-																				: 'bg-gray-500'
+																		className={`text-sm font-semibold mx-2 ${
+																			task.priority === 'High'
+																				? 'text-red-500'
+																				: task.priority === 'Medium'
+																				? 'text-orange-500'
+																				: 'text-yellow-500'
 																		}`}>
-																		<option value='To Do'>To Do</option>
-																		<option value='In Progress'>
-																			In Progress
+																		<option
+																			value='High'
+																			className='text-red-500'>
+																			High Priority
 																		</option>
-																		<option value='Done'>Done</option>
+																		<option
+																			value='Medium'
+																			className='text-orange-500'>
+																			Medium Priority
+																		</option>
+																		<option
+																			value='Low'
+																			className='text-yellow-500'>
+																			Low Priority
+																		</option>
 																	</select>
-																	<button
-																		className='ml-3'
-																		onClick={() => handleDeleteTask(task.id)}>
-																		<svg
-																			xmlns='http://www.w3.org/2000/svg'
-																			fill='none'
-																			viewBox='0 0 24 24'
-																			strokeWidth={1.5}
-																			stroke='currentColor'
-																			className='w-6 h-6 text-white bg-red-500 rounded p-1'>
-																			<path
-																				strokeLinecap='round'
-																				strokeLinejoin='round'
-																				d='m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0'
-																			/>
-																		</svg>
-																	</button>
+																	<div className='flex items-center'>
+																		<select
+																			value={task.status}
+																			onChange={(e) =>
+																				handleEditTask(
+																					task.id,
+																					'status',
+																					e.target.value
+																				)
+																			}
+																			className={`text-white py-1 px-2 rounded ${
+																				task.status === 'To Do'
+																					? 'bg-orange-600'
+																					: task.status === 'In Progress'
+																					? 'bg-purple-600'
+																					: 'bg-teal-600'
+																			}`}>
+																			<option value='To Do'>To Do</option>
+																			<option value='In Progress'>
+																				In Progress
+																			</option>
+																			<option value='Done'>Done</option>
+																		</select>
+																		<button
+																			className='ml-3'
+																			onClick={() => handleDeleteTask(task.id)}>
+																			<svg
+																				xmlns='http://www.w3.org/2000/svg'
+																				fill='none'
+																				viewBox='0 0 24 24'
+																				strokeWidth={1.5}
+																				stroke='currentColor'
+																				className='w-6 h-6 text-white bg-red-500 rounded p-1'>
+																				<path
+																					strokeLinecap='round'
+																					strokeLinejoin='round'
+																					d='m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0'
+																				/>
+																			</svg>
+																		</button>
+																	</div>
 																</div>
 															</li>
 														)}
@@ -334,9 +375,9 @@ export default function ProjectDetail({
 
 				{/* KANBAN VIEW */}
 				{viewType === 'kanban' && (
-					<div className='flex-0 overflow-x-auto h-full'>
+					<div className='flex-0 overflow-x-auto'>
 						<DragDropContext onDragEnd={handleDragEnd}>
-							<div className='flex space-x-1 w-full'>
+							<div className='flex space-x-1 w-full h-[calc(100vh-230px)] overflow-auto'>
 								{project.steps.map((step, stepIndex) => {
 									const tasksForStep = kanbanViewTasks
 										.filter((t) => t.step === stepIndex)
@@ -365,20 +406,61 @@ export default function ProjectDetail({
 																		{...provided.draggableProps}
 																		{...provided.dragHandleProps}
 																		className='bg-white p-2 rounded mb-2 shadow'>
-																		<div className='flex justify-between items-center'>
+																		<div className='flex flex-col gap-2 text-left'>
 																			<span
-																				className='font-semibold cursor-pointer'
+																				className='bg-gray-100 px-1 rounded w-full font-semibold cursor-pointer flex'
 																				onClick={() => openTaskModal(task)}>
 																				{task.title}
+																				<svg
+																					xmlns='http://www.w3.org/2000/svg'
+																					fill='none'
+																					viewBox='0 0 24 24'
+																					strokeWidth={1.5}
+																					stroke='currentColor'
+																					className='size-4 mt-1 ml-1'>
+																					<path
+																						strokeLinecap='round'
+																						strokeLinejoin='round'
+																						d='M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25'
+																					/>
+																				</svg>
 																			</span>
 																			<p className='text-xs text-gray-600'>
 																				Assigned to:{' '}
-																				{task.assignee || 'Unassigned'}
+																				{task.assignee ? (
+																					<UserName uid={task.assignee} />
+																				) : (
+																					'Unassigned'
+																				)}
 																			</p>
+																			<div className='flex justify-between'>
+																				<select
+																					value={task.status}
+																					onChange={(e) =>
+																						handleEditTask(
+																							task.id,
+																							'status',
+																							e.target.value
+																						)
+																					}
+																					className={`flex-shrink-0 text-xs text-white py-0 px-1 m-0 rounded uppercase ${
+																						task.status === 'To Do'
+																							? 'bg-orange-600'
+																							: task.status === 'In Progress'
+																							? 'bg-purple-600'
+																							: 'bg-teal-600'
+																					}`}>
+																					<option value='To Do'>To Do</option>
+																					<option value='In Progress'>
+																						In Progress
+																					</option>
+																					<option value='Done'>Done</option>
+																				</select>
+																				<p className='flex-shrink-0 text-xs text-red-300 m-0'>
+																					Due: {task.dueDate || 'None'}
+																				</p>
+																			</div>
 																		</div>
-																		<p className='text-xs text-red-300'>
-																			Due: {task.dueDate || 'No due date yet'}
-																		</p>
 																	</div>
 																)}
 															</Draggable>
