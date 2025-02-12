@@ -120,7 +120,7 @@ export default function NavBar() {
 							)}
 						</button>
 						{showNotifications && (
-							<div className='absolute right-0 top-12 mt-2 w-80 bg-white shadow-lg rounded z-50'>
+							<div className='absolute right-0 top-12 mt-2 w-96 bg-white shadow-lg rounded z-50'>
 								<Notifications />
 							</div>
 						)}
@@ -189,13 +189,6 @@ export default function NavBar() {
 					</li>
 				)}
 			</ul>
-			{/* {showNotifications && (
-				<div
-					ref={dropdownRef}
-					className='absolute right-0 top-16 mt-2 w-80 bg-white shadow-lg rounded z-50'>
-					<Notifications />
-				</div>
-			)} */}
 		</nav>
 	);
 }

@@ -19,7 +19,6 @@ export default function FriendRequestForm() {
 	const sendRequest = async () => {
 		if (!email) return;
 		try {
-			// Query the /users collection for a user with the given email.
 			const usersRef = collection(db, 'users');
 			const q = query(usersRef, where('email', '==', email));
 			const snapshot = await getDocs(q);
@@ -27,16 +26,9 @@ export default function FriendRequestForm() {
 				setMessage('No user found with that email.');
 				return;
 			}
-			// Assume emails are unique; take the first document.
 			const recipientDoc = snapshot.docs[0];
 			const recipientUid = recipientDoc.id;
-			console.log('Sending notification to:', recipientUid);
-			console.log('Requester profile:', {
-				displayName: currentUser.displayName,
-				email: currentUser.email,
-			});
 
-			// Create a friend request document in the connections collection.
 			const connectionsRef = collection(db, 'connections');
 			await addDoc(connectionsRef, {
 				requester: currentUser.uid,
@@ -47,6 +39,7 @@ export default function FriendRequestForm() {
 			});
 
 			await sendFriendRequestNotification(recipientUid, {
+				uid: currentUser.uid,
 				displayName: currentUser.displayName,
 				email: currentUser.email,
 			});
@@ -71,7 +64,7 @@ export default function FriendRequestForm() {
 			/>
 			<button
 				onClick={sendRequest}
-				className='bg-blue-500 text-white px-4 py-2 rounded'>
+				className='bg-teal-500 text-white px-4 py-2 rounded'>
 				Send Request
 			</button>
 			{message && <p className='mt-2'>{message}</p>}

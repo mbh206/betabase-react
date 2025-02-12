@@ -362,6 +362,7 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 	const handleSaveTask = async (updatedTask) => {
 		try {
 			if (updatedTask.id) {
+				// Existing task: update Firestore; onSnapshot will update the tasks state.
 				const taskRef = doc(
 					db,
 					'projects',
@@ -370,11 +371,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 					updatedTask.id
 				);
 				await updateDoc(taskRef, updatedTask);
-				setTasks((prevTasks) =>
-					prevTasks.map((task) =>
-						task.id === updatedTask.id ? updatedTask : task
-					)
-				);
 			} else {
 				const taskCollectionRef = collection(
 					db,
@@ -382,9 +378,7 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 					selectedProject.id,
 					'tasks'
 				);
-				const docRef = await addDoc(taskCollectionRef, updatedTask);
-				const newTask = { ...updatedTask, id: docRef.id };
-				setTasks((prevTasks) => [...prevTasks, newTask]);
+				await addDoc(taskCollectionRef, updatedTask);
 			}
 			setActiveTaskModal(null);
 		} catch (error) {

@@ -12,6 +12,7 @@ import {
 	serverTimestamp,
 } from 'firebase/firestore';
 import { sendFriendRequestAcceptedNotification } from '../utils/notifications';
+import { UserName } from './UserName';
 
 export default function IncomingFriendRequests() {
 	const { currentUser } = useAuth();
@@ -45,16 +46,16 @@ export default function IncomingFriendRequests() {
 				status: accepted ? 'accepted' : 'rejected',
 				updatedAt: serverTimestamp(),
 			});
-			// Remove the request from local state
 			setRequests((prev) => prev.filter((req) => req.id !== id));
 			if (accepted) {
 				const requesterDoc = await getDoc(doc(db, 'users', requesterUid));
 				if (requesterDoc.exists()) {
 					const requesterProfile = requesterDoc.data();
-					await sendFriendRequestAcceptedNotification(
-						requesterUid,
-						requesterProfile
-					);
+					await sendFriendRequestAcceptedNotification(requesterUid, {
+						uid: requesterUid,
+						displayName: requesterProfile.displayName,
+						email: requesterProfile.email,
+					});
 				}
 			}
 		} catch (error) {
@@ -72,21 +73,20 @@ export default function IncomingFriendRequests() {
 					{requests.map((req) => (
 						<li
 							key={req.id}
-							className='mb-2'>
-							<span className='mr-2'>
-								{/* For simplicity, display the requester UID. In production, join with the /users collection. */}
-								From: {req.requester}
-							</span>
-							<button
-								onClick={() => handleResponse(req.id, true, req.requester)}
-								className='bg-green-500 text-white px-2 py-1 rounded mr-2'>
-								Accept
-							</button>
-							<button
-								onClick={() => handleResponse(req.id, false, req.requester)}
-								className='bg-red-500 text-white px-2 py-1 rounded'>
-								Reject
-							</button>
+							className='mb-2 flex justify-between border-b pb-1 mx-4'>
+							<UserName uid={req.requester} />
+							<div>
+								<button
+									onClick={() => handleResponse(req.id, true, req.requester)}
+									className='bg-teal-500 text-white text-sm py-1 px-2 rounded mr-2'>
+									Accept
+								</button>
+								<button
+									onClick={() => handleResponse(req.id, false, req.requester)}
+									className='bg-orange-500 text-white text-sm py-1 px-2 rounded'>
+									Reject
+								</button>
+							</div>
 						</li>
 					))}
 				</ul>

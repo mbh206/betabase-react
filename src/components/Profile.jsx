@@ -231,7 +231,7 @@ export default function Profile() {
 						<div className='flex flex-col gap-2 p-4 border rounded mb-4'>
 							<div className='mt-2'>
 								<Link to='/dashboard/'>
-									<h2 className='w-32 bg-blue-500 text-white text-center rounded py-2 text-lg hover:shadow-lg shadow'>
+									<h2 className='w-32 bg-teal-500 text-white text-center rounded py-2 text-lg hover:shadow-lg shadow'>
 										See Projects
 									</h2>
 								</Link>
@@ -268,7 +268,7 @@ export default function Profile() {
 									Projects You're a Collaborator On
 								</h2>
 								{userProjects
-									.filter((project) => project.owner !== currentUser.uid)
+									.filter((project) => project.owner === currentUser.uid)
 									.map((project) => (
 										<div key={project.id}>
 											<strong>{project.name}</strong> |{' '}

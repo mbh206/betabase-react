@@ -1,4 +1,3 @@
-// src/utils/notifications.js
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -14,6 +13,7 @@ export async function sendFriendRequestNotification(
 	try {
 		await addDoc(collection(db, 'notifications'), {
 			recipient: recipientUid,
+			fromUid: requesterProfile.uid || '',
 			message: `${
 				requesterProfile.displayName || requesterProfile.email
 			} sent you a friend request.`,
@@ -25,6 +25,11 @@ export async function sendFriendRequestNotification(
 		console.error('Error sending friend request notification:', error);
 	}
 }
+/**
+ * Creates a notification when a friend request is accepted.
+ * @param {string} recipientUid - UID of the original requester.
+ * @param {object} accepterProfile - Object with uid, displayName, and email of the accepter.
+ */
 
 export async function sendFriendRequestAcceptedNotification(
 	recipientUid,
@@ -33,6 +38,7 @@ export async function sendFriendRequestAcceptedNotification(
 	try {
 		await addDoc(collection(db, 'notifications'), {
 			recipient: recipientUid,
+			fromUid: accepterProfile.uid || '',
 			message: `${
 				accepterProfile.displayName || accepterProfile.email
 			} accepted your friend request.`,

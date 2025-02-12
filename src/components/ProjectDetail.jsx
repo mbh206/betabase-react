@@ -361,7 +361,7 @@ export default function ProjectDetail({
 													onClick={() =>
 														openTaskModal(newTaskTemplate(selectedStep))
 													}
-													className='w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded'>
+													className='w-full bg-teal-500 hover:bg-blue-600 text-white py-2 rounded'>
 													+ Add Task
 												</button>
 											</div>
@@ -472,7 +472,7 @@ export default function ProjectDetail({
 															onClick={() =>
 																openTaskModal(newTaskTemplate(stepIndex))
 															}
-															className='w-full bg-blue-500 hover:bg-blue-600 text-white py-1 rounded'>
+															className='w-full bg-teal-500 hover:bg-blue-600 text-white py-1 rounded'>
 															+ Add Task
 														</button>
 													</div>
