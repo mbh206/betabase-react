@@ -284,7 +284,7 @@ export default function ProjectDetail({
 																				e.target.value
 																			)
 																		}
-																		className={`text-sm font-semibold mx-2 ${
+																		className={`text-sm font-semibold my-2 ${
 																			task.priority === 'High'
 																				? 'text-red-500'
 																				: task.priority === 'Medium'
@@ -361,7 +361,7 @@ export default function ProjectDetail({
 													onClick={() =>
 														openTaskModal(newTaskTemplate(selectedStep))
 													}
-													className='w-full bg-teal-500 hover:bg-blue-600 text-white py-2 rounded'>
+													className='w-full bg-teal-500 hover:bg-teal-600 text-white py-2 rounded'>
 													+ Add Task
 												</button>
 											</div>
@@ -472,7 +472,7 @@ export default function ProjectDetail({
 															onClick={() =>
 																openTaskModal(newTaskTemplate(stepIndex))
 															}
-															className='w-full bg-teal-500 hover:bg-blue-600 text-white py-1 rounded'>
+															className='w-full bg-teal-500 hover:bg-teal-600 text-white py-1 rounded'>
 															+ Add Task
 														</button>
 													</div>

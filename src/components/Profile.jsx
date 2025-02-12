@@ -238,14 +238,17 @@ export default function Profile() {
 							</div>
 							<div>
 								<h2 className='text-xl font-bold my-2'>
-									Your Projects & Collaborators
+									Projects You're a Collaborator On
 								</h2>
 								{projectsNotOwned.length === 0 ? (
 									<p>No projects with collaborator.</p>
 								) : (
 									projectsNotOwned.map((project) => (
 										<div key={project.id}>
-											<strong>{project.name}</strong> |{' '}
+											<Link to={`/dashboard/${project.id}`}>
+												<strong>{project.name}</strong>
+											</Link>{' '}
+											|{' '}
 											<span className='text-sm text-gray-500'>
 												Collaborators:{' '}
 												{project.collaborators &&
@@ -264,14 +267,15 @@ export default function Profile() {
 								)}
 							</div>
 							<div className='mt-4'>
-								<h2 className='text-xl font-bold my-2'>
-									Projects You're a Collaborator On
-								</h2>
+								<h2 className='text-xl font-bold my-2'>Your Projects</h2>
 								{userProjects
 									.filter((project) => project.owner === currentUser.uid)
 									.map((project) => (
 										<div key={project.id}>
-											<strong>{project.name}</strong> |{' '}
+											<Link to={`/dashboard/${project.id}`}>
+												<strong>{project.name}</strong>
+											</Link>{' '}
+											|{' '}
 											<span className='text-sm text-gray-500'>
 												Owner: <UserName uid={project.owner} />
 											</span>

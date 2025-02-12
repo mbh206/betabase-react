@@ -75,7 +75,7 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 		};
 
 		const width = window.innerWidth;
-		if (width < 1000) {
+		if (width < 768) {
 			setIsMobile(true);
 		}
 		fetchProjects();
