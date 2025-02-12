@@ -212,15 +212,6 @@ export default function Profile() {
 						<FriendRequestForm />
 						<IncomingFriendRequests />
 						<ConnectionsList />
-
-						{/* <div className='mt-4'>
-							<h2 className='text-xl font-bold my-2'>All Users</h2>
-							<ul>
-								{allUsers.map((user) => (
-									<li key={user.uid}>{user.username || user.email}</li>
-								))}
-							</ul>
-						</div> */}
 						<div className='flex flex-col gap-2 p-4 border rounded my-4'>
 							<h2 className='text-xl font-bold my-2'>Recent Activity</h2>
 							{recentProjects.map((project) => (

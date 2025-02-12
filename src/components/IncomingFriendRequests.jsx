@@ -8,8 +8,10 @@ import {
 	getDocs,
 	updateDoc,
 	doc,
+	getDoc,
 	serverTimestamp,
 } from 'firebase/firestore';
+import { sendFriendRequestAcceptedNotification } from '../utils/notifications';
 
 export default function IncomingFriendRequests() {
 	const { currentUser } = useAuth();
@@ -36,7 +38,7 @@ export default function IncomingFriendRequests() {
 		fetchRequests();
 	}, [currentUser]);
 
-	const handleResponse = async (id, accepted) => {
+	const handleResponse = async (id, accepted, requesterUid) => {
 		try {
 			const requestRef = doc(db, 'connections', id);
 			await updateDoc(requestRef, {
@@ -45,6 +47,16 @@ export default function IncomingFriendRequests() {
 			});
 			// Remove the request from local state
 			setRequests((prev) => prev.filter((req) => req.id !== id));
+			if (accepted) {
+				const requesterDoc = await getDoc(doc(db, 'users', requesterUid));
+				if (requesterDoc.exists()) {
+					const requesterProfile = requesterDoc.data();
+					await sendFriendRequestAcceptedNotification(
+						requesterUid,
+						requesterProfile
+					);
+				}
+			}
 		} catch (error) {
 			console.error('Error updating friend request:', error);
 		}
@@ -66,12 +78,12 @@ export default function IncomingFriendRequests() {
 								From: {req.requester}
 							</span>
 							<button
-								onClick={() => handleResponse(req.id, true)}
+								onClick={() => handleResponse(req.id, true, req.requester)}
 								className='bg-green-500 text-white px-2 py-1 rounded mr-2'>
 								Accept
 							</button>
 							<button
-								onClick={() => handleResponse(req.id, false)}
+								onClick={() => handleResponse(req.id, false, req.requester)}
 								className='bg-red-500 text-white px-2 py-1 rounded'>
 								Reject
 							</button>

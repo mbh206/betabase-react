@@ -9,6 +9,7 @@ import {
 	addDoc,
 	serverTimestamp,
 } from 'firebase/firestore';
+import { sendFriendRequestNotification } from '../utils/notifications';
 
 export default function FriendRequestForm() {
 	const { currentUser } = useAuth();
@@ -29,6 +30,11 @@ export default function FriendRequestForm() {
 			// Assume emails are unique; take the first document.
 			const recipientDoc = snapshot.docs[0];
 			const recipientUid = recipientDoc.id;
+			console.log('Sending notification to:', recipientUid);
+			console.log('Requester profile:', {
+				displayName: currentUser.displayName,
+				email: currentUser.email,
+			});
 
 			// Create a friend request document in the connections collection.
 			const connectionsRef = collection(db, 'connections');
@@ -39,6 +45,12 @@ export default function FriendRequestForm() {
 				createdAt: serverTimestamp(),
 				updatedAt: serverTimestamp(),
 			});
+
+			await sendFriendRequestNotification(recipientUid, {
+				displayName: currentUser.displayName,
+				email: currentUser.email,
+			});
+
 			setMessage('Friend request sent.');
 			setEmail('');
 		} catch (error) {
