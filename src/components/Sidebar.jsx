@@ -92,11 +92,11 @@ export default function Sidebar({
 					<div className='p-1 bg-gray-500 rounded-xl'>
 						<h2 className='text-xl font-semibold m-2'>Active Projects</h2>
 						<ProjectList
+							setIsMobileSidebarOpen={setIsMobileSidebarOpen}
 							projects={projects}
 							selectedProject={selectedProject}
 							onProjectSelect={(proj) => {
 								handleSelectProject(proj);
-								setIsMobileSidebarOpen(false);
 							}}
 						/>
 					</div>

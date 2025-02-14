@@ -57,6 +57,11 @@ export default function Login() {
 					Sign Up
 				</Link>
 			</p>
+			<p className='text-gray-400 text-xs'>
+				If you don't want to signup, use this demo account to login
+			</p>
+			<p className='text-gray-400 text-xs'>Email: demo@demo.com</p>
+			<p className='text-gray-400 text-xs'>Password: 123123</p>
 		</div>
 	);
 }

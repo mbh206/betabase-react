@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function ProjectList({ projects, selectedProject }) {
+export default function ProjectList({
+	projects,
+	selectedProject,
+	setIsMobileSidebarOpen,
+}) {
 	return (
 		<ul>
 			{projects.map((project) => (
@@ -12,7 +16,11 @@ export default function ProjectList({ projects, selectedProject }) {
 							? 'bg-blue-600'
 							: 'hover:bg-gray-900'
 					}`}>
-					<Link to={`/dashboard/${project.id}`}>{project.name}</Link>
+					<Link
+						to={`/dashboard/${project.id}`}
+						onClick={() => setIsMobileSidebarOpen(false)}>
+						{project.name}
+					</Link>
 				</li>
 			))}
 		</ul>

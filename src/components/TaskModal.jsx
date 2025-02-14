@@ -16,6 +16,7 @@ export default function TaskModal({
 
 	useEffect(() => {
 		setLocalTask(task);
+		setRichTextValue(task.description || '');
 	}, [task]);
 
 	const handleLocalChange = (field, value) => {
@@ -108,7 +109,7 @@ export default function TaskModal({
 					</div>
 					<div className='mb-2'>
 						<label className='block text-sm font-light'>
-							Issues (comma separated)
+							Tech Stack (comma separated)
 						</label>
 						<input
 							type='text'
@@ -124,7 +125,7 @@ export default function TaskModal({
 					</div>
 					<div className='mb-2'>
 						<label className='block text-sm font-light'>
-							Challenges (comma separated)
+							Services Used (comma separated)
 						</label>
 						<input
 							type='text'
@@ -138,7 +139,7 @@ export default function TaskModal({
 							}
 						/>
 					</div>
-					<div className='mb-2'>
+					{/* <div className='mb-2'>
 						<label className='block text-sm font-light'>Awaiting</label>
 						<input
 							type='text'
@@ -146,7 +147,7 @@ export default function TaskModal({
 							value={localTask.awaiting || ''}
 							onChange={(e) => handleLocalChange('awaiting', e.target.value)}
 						/>
-					</div>
+					</div> */}
 					<div className='mb-2'>
 						<label className='block text-sm font-light'>Assign To</label>
 						<select
@@ -172,7 +173,7 @@ export default function TaskModal({
 						</button>
 						<button
 							type='button'
-							className='bg-blue-500 text-white px-4 py-2 rounded'
+							className='bg-teal-500 text-white px-4 py-2 rounded'
 							onClick={() => onSave(localTask)}>
 							Save Changes
 						</button>
