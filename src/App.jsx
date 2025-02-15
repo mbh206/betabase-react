@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Dashboard from './components/Dashboard';
@@ -11,6 +11,17 @@ import NavBar from './components/NavBar';
 
 function App() {
 	const [selectedProject, setSelectedProject] = useState(null);
+	const headerRef = useRef(null);
+
+	useEffect(() => {
+		if (headerRef.current) {
+			const headerHeight = headerRef.current.offsetHeight;
+			document.documentElement.style.setProperty(
+				'--header-height',
+				`${headerHeight}px`
+			);
+		}
+	}, []);
 
 	function handleSelectProject(project) {
 		setSelectedProject(project);
@@ -18,7 +29,9 @@ function App() {
 
 	return (
 		<>
-			<NavBar />
+			<header ref={headerRef}>
+				<NavBar />
+			</header>
 			<Routes>
 				{/* Public routes */}
 				<Route

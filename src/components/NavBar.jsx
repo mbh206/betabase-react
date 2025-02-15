@@ -52,7 +52,9 @@ export default function NavBar() {
 	};
 
 	return (
-		<nav className='flex justify-between items-center px-4 bg-white sticky top-0 left-0 z-50 shadow'>
+		<nav
+			id='navbar'
+			className='flex justify-between items-center px-4 bg-white sticky top-0 left-0 z-50 shadow'>
 			<div className='flex flex-col px-1 pt-2'>
 				<Link to='/'>
 					<img

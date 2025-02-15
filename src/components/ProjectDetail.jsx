@@ -1,5 +1,5 @@
 // src/components/Dashboard/ProjectDetail.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { UserName } from '../components/UserName';
 
@@ -23,6 +23,22 @@ export default function ProjectDetail({
 	handleDeleteProject,
 }) {
 	const [viewType, setViewType] = React.useState('list');
+	const [descHeight, setDescHeight] = useState(0);
+
+	useEffect(() => {
+		function updateDescHeight() {
+			const descEl = document.getElementById('description-div');
+			if (descEl) {
+				document.documentElement.style.setProperty(
+					'--desc-height',
+					`${descEl.offsetHeight}px`
+				);
+			}
+		}
+		updateDescHeight();
+		window.addEventListener('resize', updateDescHeight);
+		return () => window.removeEventListener('resize', updateDescHeight);
+	}, []);
 
 	if (!project) return <div>No project selected.</div>;
 
@@ -48,7 +64,9 @@ export default function ProjectDetail({
 
 	return (
 		<div className='project-detail flex flex-col h-full overflow-hidden'>
-			<div className='header px-4 py-2 flex-shrink-0'>
+			<div
+				id='description-div'
+				className='header px-4 py-2 flex-shrink-0'>
 				<div className='flex flex-col sm:flex-row justify-between items-center mb-2 gap-2'>
 					<div className='border-b p-1 flex gap-2'>
 						<h2 className='text-2xl font-bold uppercase mx-1'>
@@ -377,7 +395,8 @@ export default function ProjectDetail({
 				{viewType === 'kanban' && (
 					<div className='flex-0 overflow-x-auto'>
 						<DragDropContext onDragEnd={handleDragEnd}>
-							<div className='flex space-x-1 w-full h-[calc(100vh-230px)] overflow-auto'>
+							<div
+								className={`flex space-x-1 w-full dynamic-height overflow-auto`}>
 								{project.steps.map((step, stepIndex) => {
 									const tasksForStep = kanbanViewTasks
 										.filter((t) => t.step === stepIndex)
