@@ -5,9 +5,11 @@ import {
 	collection,
 	query,
 	where,
+	getDocs,
 	onSnapshot,
 	doc,
 	getDoc,
+	deleteDoc,
 } from 'firebase/firestore';
 
 export default function ConnectionsList() {
@@ -15,6 +17,15 @@ export default function ConnectionsList() {
 	const [connections, setConnections] = useState([]);
 	const [userMap, setUserMap] = useState({});
 	const [loading, setLoading] = useState(true);
+
+	const handleDeleteConnection = async (connectionId) => {
+		try {
+			await deleteDoc(doc(db, 'connections', connectionId));
+			setConnections((prev) => prev.filter((conn) => conn.id !== connectionId));
+		} catch (error) {
+			console.error('Error deleting connection:', error);
+		}
+	};
 
 	useEffect(() => {
 		if (!currentUser) return;
@@ -105,8 +116,30 @@ export default function ConnectionsList() {
 								: conn.requester;
 						const user = userMap[otherUid];
 						return (
-							<li key={conn.id}>
-								{user ? user.username || user.email : otherUid}
+							<li
+								key={conn.id}
+								className='flex justify-between border-b pb-1'>
+								<span className='uppercase'>
+									{user ? user.displayName || user.email : otherUid}
+								</span>
+								<button
+									onClick={() => handleDeleteConnection(conn.id)}
+									className='text-red-500 hover:text-red-700'
+									title='Delete connection'>
+									<svg
+										xmlns='http://www.w3.org/2000/svg'
+										fill='none'
+										viewBox='0 0 24 24'
+										strokeWidth={1.5}
+										stroke='currentColor'
+										className='size-8 p-1 bg-red-400 text-white rounded-full border shadow-sm hover:shadow-lg active:shadow-xs'>
+										<path
+											strokeLinecap='round'
+											strokeLinejoin='round'
+											d='M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z'
+										/>
+									</svg>
+								</button>
 							</li>
 						);
 					})}

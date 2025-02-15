@@ -47,6 +47,8 @@ export default function Signup() {
 					ref={displayNameRef}
 					required
 					className='border p-2 w-full mb-2'
+					minLength='3'
+					maxLength='30'
 				/>
 				<input
 					type='email'
