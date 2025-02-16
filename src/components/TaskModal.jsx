@@ -139,15 +139,6 @@ export default function TaskModal({
 							}
 						/>
 					</div>
-					{/* <div className='mb-2'>
-						<label className='block text-sm font-light'>Awaiting</label>
-						<input
-							type='text'
-							className='border px-2 py-1 rounded-xl w-full'
-							value={localTask.awaiting || ''}
-							onChange={(e) => handleLocalChange('awaiting', e.target.value)}
-						/>
-					</div> */}
 					<div className='mb-2'>
 						<label className='block text-sm font-light'>Assign To</label>
 						<select

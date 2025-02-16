@@ -23,7 +23,6 @@ export default function ProjectDetail({
 	handleDeleteProject,
 }) {
 	const [viewType, setViewType] = React.useState('list');
-	const [descHeight, setDescHeight] = useState(0);
 
 	useEffect(() => {
 		function updateDescHeight() {
@@ -373,7 +372,6 @@ export default function ProjectDetail({
 												))}
 												{provided.placeholder}
 											</ul>
-											{/* + Add Task button for List View */}
 											<div className='mt-2'>
 												<button
 													onClick={() =>
@@ -390,8 +388,6 @@ export default function ProjectDetail({
 						</DragDropContext>
 					</div>
 				)}
-
-				{/* KANBAN VIEW */}
 				{viewType === 'kanban' && (
 					<div className='flex-0 overflow-x-auto'>
 						<DragDropContext onDragEnd={handleDragEnd}>

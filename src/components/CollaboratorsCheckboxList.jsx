@@ -1,4 +1,3 @@
-// src/components/CollaboratorsCheckboxList.jsx
 import React, { useState, useEffect } from 'react';
 import {
 	collection,
@@ -20,7 +19,6 @@ export default function CollaboratorsCheckboxList({
 	useEffect(() => {
 		async function fetchConnectedUsers() {
 			try {
-				// Query for connections where currentUser is the requester and accepted.
 				const q1 = query(
 					collection(db, 'connections'),
 					where('requester', '==', currentUser.uid),
@@ -29,7 +27,6 @@ export default function CollaboratorsCheckboxList({
 				const snapshot1 = await getDocs(q1);
 				const conns1 = snapshot1.docs.map((doc) => doc.data());
 
-				// Query for connections where currentUser is the recipient and accepted.
 				const q2 = query(
 					collection(db, 'connections'),
 					where('recipient', '==', currentUser.uid),
@@ -38,11 +35,9 @@ export default function CollaboratorsCheckboxList({
 				const snapshot2 = await getDocs(q2);
 				const conns2 = snapshot2.docs.map((doc) => doc.data());
 
-				// Merge the two sets of connections.
 				const allConns = [...conns1, ...conns2];
 				const uidsSet = new Set();
 				allConns.forEach((conn) => {
-					// Determine the "other" user's UID.
 					const otherUid =
 						conn.requester === currentUser.uid
 							? conn.recipient
@@ -51,7 +46,6 @@ export default function CollaboratorsCheckboxList({
 				});
 				const uids = Array.from(uidsSet);
 
-				// Fetch user profiles for each connected UID.
 				const usersArray = await Promise.all(
 					uids.map(async (uid) => {
 						const userDoc = await getDoc(doc(db, 'users', uid));
@@ -69,13 +63,10 @@ export default function CollaboratorsCheckboxList({
 		fetchConnectedUsers();
 	}, [currentUser]);
 
-	// When a checkbox is toggled, update the array of selected collaborator UIDs.
 	const toggleUser = (uid) => {
 		if (value.includes(uid)) {
-			// Remove uid.
 			onChange(value.filter((item) => item !== uid));
 		} else {
-			// Add uid.
 			onChange([...value, uid]);
 		}
 	};

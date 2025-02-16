@@ -67,11 +67,9 @@ export default function MobileDrawer({ isOpen, onClose, children }) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
 				<div className='p-4 space-y-3 overflow-auto h-full'>
-					{/* Here’s where we render the icons on mobile */}
 					<ul className='flex gap-4 mt-2 mb-4 uppercase font-bold text-xl'>
 						<li>
 							<Link to='/'>
-								{/* Home icon */}
 								<svg
 									xmlns='http://www.w3.org/2000/svg'
 									fill='none'
@@ -178,7 +176,6 @@ export default function MobileDrawer({ isOpen, onClose, children }) {
 							</li>
 						) : (
 							<li>
-								{/* Use a button to call handleLogout */}
 								<button
 									onClick={handleLogout}
 									className='focus:outline-none'>

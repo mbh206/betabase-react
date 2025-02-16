@@ -169,8 +169,6 @@ export default function NavBar() {
 					</li>
 				) : (
 					<li>
-						{/* Use a button to call handleLogout */}
-
 						<button
 							onClick={handleLogout}
 							className='focus:outline-none'>

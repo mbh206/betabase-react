@@ -9,7 +9,6 @@ import {
 	query,
 	where,
 	getDocs,
-	Timestamp,
 } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import FriendRequestForm from './FriendRequestForm';
@@ -121,7 +120,7 @@ export default function Profile() {
 
 			fetchUserProjects();
 		}
-	}, [currentUser]);
+	}, [currentUser, fetchProfile]);
 
 	return (
 		<>

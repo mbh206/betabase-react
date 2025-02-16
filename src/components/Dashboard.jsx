@@ -18,8 +18,6 @@ import ProjectDetail from './ProjectDetail';
 import AddProjectModal from './AddProjectModal';
 import ProjectList from './ProjectList';
 import TaskModal from './TaskModal';
-import { UserName } from './UserName';
-import CollaboratorsMultiSelect from './CollaboratorsMultiSelect';
 import defaultSteps from '../templates/defaultStepTemplate';
 import CollaboratorsCheckboxList from '../components/CollaboratorsCheckboxList';
 
@@ -191,16 +189,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 			: 0;
 	};
 
-	const filteredTasks = tasks
-		.filter((task) => task.step === selectedStep)
-		.filter((task) =>
-			filterPriority ? task.priority === filterPriority : true
-		)
-		.filter((task) =>
-			task.title.toLowerCase().includes(filterSearch.toLowerCase())
-		)
-		.sort((a, b) => a.order - b.order);
-
 	const handleDragEnd = async (result) => {
 		if (!result.destination) return;
 
@@ -264,43 +252,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 		}
 	};
 
-	const updateTaskOrder = async (updatedTasks) => {
-		try {
-			const batch = updatedTasks.map((task, index) => ({
-				id: task.id,
-				order: index,
-			}));
-
-			for (const task of batch) {
-				const taskRef = doc(
-					db,
-					'projects',
-					selectedProject.id,
-					'tasks',
-					task.id
-				);
-				await updateDoc(taskRef, { order: task.order });
-			}
-		} catch (error) {
-			console.error('Error updating task order:', error);
-		}
-	};
-
-	const updateTaskStep = async (taskId, newStepIndex) => {
-		try {
-			const taskRef = doc(db, 'projects', selectedProject.id, 'tasks', taskId);
-			await updateDoc(taskRef, { step: newStepIndex });
-
-			setTasks((prevTasks) =>
-				prevTasks.map((task) =>
-					task.id === taskId ? { ...task, step: newStepIndex } : task
-				)
-			);
-		} catch (error) {
-			console.error('Error updating task step:', error);
-		}
-	};
-
 	const handleAddTask = async (priority) => {
 		if (!newTaskTitle.trim()) return;
 		try {
@@ -322,7 +273,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 			};
 			await addDoc(taskRef, newTask);
 
-			// setTasks([...tasks, { ...newTask, id: docRef.id }]);
 			setNewTaskTitle('');
 			setNewTaskDescription('');
 			setSelectedDueDate('');
@@ -362,7 +312,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 	const handleSaveTask = async (updatedTask) => {
 		try {
 			if (updatedTask.id) {
-				// Existing task: update Firestore; onSnapshot will update the tasks state.
 				const taskRef = doc(
 					db,
 					'projects',
@@ -388,7 +337,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 
 	return (
 		<div className='flex  h-[calc(100vh-85px)]'>
-			{/* Sidebar */}
 			<Sidebar
 				className='w-64 flex-shrink-0'
 				projects={projects}
@@ -408,7 +356,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 				setShowAddForm={setShowAddProjectForm}
 				showAddProjectForm={showAddProjectForm}
 			/>
-			{/* Main Workspace */}
 			<div
 				className={`flex-1 flex flex-col overflow-hidden bg-gray-100 px-2 transition-all duration-300`}>
 				{selectedProject ? (
@@ -468,8 +415,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 					</div>
 				)}
 			</div>
-
-			{/* Edit Project Modal */}
 			{editingProject && (
 				<div className='fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50'>
 					<div className='bg-white w-11/12 max-w-2xl px-4 pb-2 pt-1 rounded shadow-md'>
@@ -541,8 +486,6 @@ export default function Dashboard({ selectedProject, setSelectedProject }) {
 					</div>
 				</div>
 			)}
-
-			{/* Task Details Modal */}
 			{activeTaskModal && (
 				<TaskModal
 					task={activeTaskModal}

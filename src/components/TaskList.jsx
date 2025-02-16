@@ -29,7 +29,6 @@ export default function TaskList({
 											{...provided.draggableProps}
 											{...provided.dragHandleProps}
 											className='bg-white p-4 rounded shadow flex justify-between items-center'>
-											{/* Task Title and description */}
 											<div className='flex items-center'>
 												<button
 													className='mr-2'
@@ -53,7 +52,6 @@ export default function TaskList({
 													{task.description || 'No description yet'}
 												</span>
 											</div>
-											{/* Priority Dropdown */}
 											<select
 												value={task.priority}
 												onChange={(e) =>
@@ -82,7 +80,6 @@ export default function TaskList({
 													Low
 												</option>
 											</select>
-											{/* Status Dropdown and Delete Button */}
 											<div className='flex items-center'>
 												<select
 													value={task.status}

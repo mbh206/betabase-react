@@ -2,7 +2,7 @@ import React from 'react';
 import AddProjectForm from './AddProjectForm';
 
 export default function AddProjectModal({ isOpen, onClose, ...formProps }) {
-	if (!isOpen) return null; // Do not render if the modal is not open
+	if (!isOpen) return null;
 
 	return (
 		<div

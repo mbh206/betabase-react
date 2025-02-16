@@ -1,4 +1,3 @@
-// src/components/Notifications.jsx
 import React, { useEffect, useState } from 'react';
 import {
 	collection,
@@ -105,29 +104,6 @@ export default function Notifications() {
 						);
 					})}
 				</ul>
-				// <ul className='border flex flex-col'>
-				// 	{notifications.map((notif) => (
-				// 		<li
-				// 			key={notif.id}
-				// 			className={`text-xs p-2 border-b ${
-				// 				notif.read ? 'bg-gray-100' : 'bg-white'
-				// 			}`}>
-				// 			<p>{notif.message}</p>
-				// 			<small>
-				// 				{notif.timestamp
-				// 					? notif.timestamp.toDate().toLocaleString()
-				// 					: ''}
-				// 			</small>
-				// 			{!notif.read && (
-				// 				<button
-				// 					onClick={() => markAsRead(notif.id)}
-				// 					className='ml-2 text-blue-500 text-xs'>
-				// 					Mark as read
-				// 				</button>
-				// 			)}
-				// 		</li>
-				// 	))}
-				// </ul>
 			)}
 		</div>
 	);

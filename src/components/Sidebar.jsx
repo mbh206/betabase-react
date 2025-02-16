@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AddProjectForm from './AddProjectForm';
 import ProjectList from './ProjectList';
 import MobileDrawer from './MobileDrawer';
 import AddProjectModal from './AddProjectModal';
@@ -15,21 +13,12 @@ export default function Sidebar({
 	isMobileSidebarOpen,
 	setIsSidebarCollapsed,
 	setIsMobileSidebarOpen,
-	setSelectedProject,
 	setNewProjectName,
 	setNewProjectDescription,
 	handleAddProject,
 	handleSelectProject,
-	setShowAddForm,
-	showAddProjectForm,
 }) {
-	const navigate = useNavigate();
 	const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
-
-	const handleProjectClick = (proj) => {
-		handleSelectProject(proj);
-		navigate(`/dashboard/${proj.id}`);
-	};
 
 	if (isMobile) {
 		return (
@@ -54,7 +43,6 @@ export default function Sidebar({
 				<MobileDrawer
 					isOpen={isMobileSidebarOpen}
 					onClose={() => setIsMobileSidebarOpen(false)}>
-					{/* Drawer content goes here */}
 					<div className='fixed top-0 right-2'>
 						<button
 							onClick={() => setIsMobileSidebarOpen(false)}
@@ -74,7 +62,6 @@ export default function Sidebar({
 							</svg>
 						</button>
 					</div>
-					{/* Add Project Form */}
 					<button
 						className='bg-orange-500 text-white px-4 py-1 rounded-lg shadow uppercase'
 						onClick={() => setIsAddProjectModalOpen(true)}>
@@ -143,7 +130,6 @@ export default function Sidebar({
 					</svg>
 				)}
 			</button>
-			{/* Add Project Form */}
 			<div
 				className={`transition-all duration-300 ${
 					isSidebarCollapsed ? 'hidden' : ''
