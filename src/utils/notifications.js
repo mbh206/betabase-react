@@ -11,7 +11,7 @@ export async function sendFriendRequestNotification(
 			fromUid: requesterProfile.uid || '',
 			message: `${
 				requesterProfile.displayName || requesterProfile.email
-			} sent you a friend request.`,
+			} sent you a friend request`,
 			type: 'friend_request_sent',
 			timestamp: serverTimestamp(),
 			read: false,
@@ -31,7 +31,7 @@ export async function sendFriendRequestAcceptedNotification(
 			fromUid: accepterProfile.uid || '',
 			message: `${
 				accepterProfile.displayName || accepterProfile.email
-			} accepted your friend request.`,
+			} has accepted your friend request`,
 			type: 'friend_request_accepted',
 			timestamp: serverTimestamp(),
 			read: false,

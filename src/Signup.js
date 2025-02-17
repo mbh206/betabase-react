@@ -1,8 +1,9 @@
+// src/Signup.jsx
 import React, { useRef, useState } from 'react';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithUniqueDisplayName } from './utils/userUtils';
 import { useNavigate, Link } from 'react-router-dom';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function Signup() {
 	const displayNameRef = useRef();
@@ -24,14 +25,18 @@ export default function Signup() {
 				emailRef.current.value,
 				passwordRef.current.value
 			);
-			// Save extra profile info in Firestore
-			await setDoc(doc(db, 'users', userCredential.user.uid), {
+
+			// Build the user data object.
+			const userData = {
 				displayName: displayNameRef.current.value,
 				email: emailRef.current.value,
-				projects: [], // This array can be updated later with project IDs
-			});
+				projects: [],
+			};
+			// Use our helper function to create the user with a unique display name.
+			await createUserWithUniqueDisplayName(userCredential.user.uid, userData);
 			navigate('/profile');
 		} catch (err) {
+			console.error(err);
 			setError('Failed to create account: ' + err.message);
 		}
 	}
